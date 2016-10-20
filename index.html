@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>Palette</title>
+
+    <link rel='stylesheet' href='static/css/app.css'>
+    <script src='static/js/adapter-latest.js'></script>
+  </head>
+
+  <body>
+
+    <div class='outer'>
+      <h1>Palette</h1>
+
+      <div class='main'>
+        <button class='btn btn--history'>H</button>
+        <div class='action'>
+          <div class='action-container'>
+            <div class='container video-container'>
+                <video></video>
+            </div>
+            <div class='container upload-container'>
+              <input type='file' accept='image/*' id='imagefile' class='file-upload' name='imagefile'>
+              <label for="imagefile">Upload</label>
+            </div>
+            <div class='container input-container'>
+              <form>
+                <input type='text' name='colour'>
+                <button type='submit'>Go</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <button class='btn btn--source'>S</button>
+      </div>
+
+      <div>
+        <canvas></canvas>
+      </div>
+
+      <div class='colour-info'>
+        <div class='colour-data'>
+          <div class='colour-rgb'>RGB</div>
+        </div>
+        <div class='colour-container'></div>
+        <div class='colour-actions'>
+          <div class='colour-hex'>HEX</div>
+        </div>
+      </div>
+
+      <div class='colours-container'><div class='colour'></div><div class='colour'></div><div class='colour'></div><div class='colour'></div><div class='colour'></div></div>
+
+      <div style='display: none;'>
+        <button class='switch'>Switch</button>
+        <button class='start'>Start</button>
+        <button class='stop'>Stop</button>
+        <button class='snap'>Snap</button>
+
+        <form>
+          <input type='text' name='colour' value='' placeholder='hex colour'>
+        </form>
+      </div>
+    </div>
+
+    <script src='static/js/c0lor.js'></script>
+    <script src='static/js/app.js'></script>
+  </body>
+
+</html>
