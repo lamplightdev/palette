@@ -1,0 +1,10 @@
+{
+  "extends": "airbnb-base",
+
+  "globals": {
+  },
+
+  "rules": {
+    "no-underscore-dangle": [0]
+  }
+}

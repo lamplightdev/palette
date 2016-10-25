@@ -1,378 +1,239 @@
-const videoDevices = [];
-let frontCamera = false;
-const maxViewportDimension = Math.max(window.innerWidth, window.innerHeight);
-
-const getRandom = (min, max) => {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
-
-/*
-navigator.mediaDevices.enumerateDevices()
-  .then(devices => {
-    devices.forEach(device => {
-      if (device.kind === 'videoinput') {
-        videoDevices.push(device);
-      }
-    });
-    init();
-  })
-  .catch(err => {
-    console.log(`${err.name}: ${err.message}`);
-  });
-*/
-
-const video = document.querySelector('video');
-const buttonSnap = document.querySelector('button.snap');
-const buttonStop = document.querySelector('button.stop');
-const buttonStart = document.querySelector('button.start');
-const buttonSwitch = document.querySelector('button.switch');
-const canvas = document.querySelector('canvas');
-const canvasContext = canvas.getContext('2d');
-const colourContainer = document.querySelector('.colour-container');
-const coloursContainer = document.querySelector('.colours-container');
-const colourRGB = document.querySelector('.colour-rgb');
-const colourHex = document.querySelector('.colour-hex');
-const fileUpload = document.querySelector('.file-upload');
-const actionContainer = document.querySelector('.action-container');
-const btnSource = document.querySelector('.btn--source');
-const inputForm = document.querySelector('.input-container form');
-
-const maxColours = 5;
-let lastColourRGB;
-let isFullscreenColour = false;
-
-const updateColourInfo = (colour) => {
-  const rgb = c0lor.RGB(colour.r, colour.g, colour.b);
-
-  colourRGB.textContent = `rgb(${rgb.R}, ${rgb.G}, ${rgb.B})`;
-  colourHex.textContent = `#${rgb.hex()}`;
-};
-
-buttonSwitch.addEventListener('click', () => {
-  frontCamera = !frontCamera;
-  init();
-});
-
-const init = () => {
-  const p = navigator.mediaDevices.getUserMedia({
-    audio: false,
-    video: {
-      facingMode: frontCamera ? 'face' : 'environment',
-    },
-  });
-
-
-  let pos = 0;
-
-  btnSource.addEventListener('click', () => {
-    pos = 150;
-    actionContainer.classList.add('animate-container');
-
-    requestAnimationFrame(() => {
-      actionContainer.style.transform = `translateX(-${pos}px)`;
-    });
-  });
-
-  actionContainer.addEventListener('transitionend', () => {
-    pos = 0;
-    actionContainer.classList.remove('animate-container');
-
-    requestAnimationFrame(() => {
-      actionContainer.style.transform = '';
-      actionContainer.appendChild(actionContainer.children[0]);
-      video.play();
-    });
-  });
-
-  inputForm.addEventListener('submit', event => {
-    event.preventDefault();
-    const pixel = event.target.colour.value.split(',').map(col => parseInt(col.trim(), 10));
-    addColour(pixel);
-  });
-
-  fileUpload.addEventListener('change', event => {
-    const data = event.target.files[0];
-    const reader = new FileReader();
-    reader.addEventListener('load', readerEvent => {
-      const image = new Image();
-      image.src = reader.result;
-
-      canvasContext.drawImage(image, 0, 0);
-
-      const pixel = canvasContext.getImageData(canvas.width / 2, canvas.height / 2, 1, 1).data;
-
-      addColour(pixel);
-    });
-    reader.readAsDataURL(data);
-  });
-
-
-  p.then(mediaStream => {
-    video.src = window.URL.createObjectURL(mediaStream);
-    video.onloadedmetadata = () => {
-      video.play();
-
-      buttonStart.addEventListener('click', () => {
-        video.play();
-      });
-
-      buttonStop.addEventListener('click', () => {
-        video.pause();
-      });
-
-      const previewSize = video.offsetWidth;
-
-      let biggestSide;
-      let smallestSide;
-      let aspectRatio;
-
-      if (video.videoHeight > video.videoWidth) {
-        biggestSide = 'height';
-        smallestSide = 'width';
-        aspectRatio = video.videoHeight / video.videoWidth;
-      } else {
-        biggestSide = 'width';
-        smallestSide = 'height';
-        aspectRatio = video.videoWidth / video.videoHeight;
-      }
-
-      const offset = Math.abs(video.videoHeight - video.videoWidth) / 2;
-
-      video.style[biggestSide] = canvas.style[biggestSide] = `${previewSize * aspectRatio}px`;
-      canvasContext.canvas[biggestSide] = previewSize * aspectRatio;
-      canvasContext.canvas[smallestSide] = previewSize;
-
-      colourContainer.addEventListener('click', event => {
-        event.stopPropagation();
-        const colourLarge = colourContainer.querySelector('.colour');
-        colourLarge.classList.add('colour--animate-fullscreen');
-
-        if (colourLarge.classList.contains('colour--fullscreen')) {
-          colourLarge.style.transform = 'scale(1)';
-          colourLarge.classList.remove('colour--fullscreen');
-          isFullscreenColour = false;
-        } else {
-          colourLarge.style.transform = `scale(${Math.ceil(maxViewportDimension / colourLarge.offsetWidth) * 2})`;
-          colourLarge.classList.add('colour--fullscreen');
-          isFullscreenColour = true;
-        }
-
-        colourLarge.addEventListener('transitionend', () => {
-          colourLarge.classList.remove('colour--animate-fullscreen');
-        });
-      }, true); // useCapture === true so we can stopPropagation to child
-
-      [video, buttonSnap].forEach(el => {
-        el.addEventListener('click', () => {
-          // flash.classList.add('flash-on');
-          canvasContext.drawImage(video,
-            biggestSide === 'height' ? 0 : offset,
-            biggestSide === 'width' ? 0 : offset,
-            biggestSide === 'height' ? video.videoWidth : video.videoHeight,
-            biggestSide === 'height' ? video.videoWidth : video.videoHeight,
-            0,
-            0,
-            previewSize,
-            previewSize
-          );
-          const pixel = canvasContext.getImageData(previewSize / 2, previewSize / 2, 1, 1).data;
-
-          // pixel[0] = getRandom(0, 255);
-          // pixel[1] = getRandom(0, 255);
-          // pixel[2] = getRandom(0, 255);
-
-          addColour(pixel);
-        });
-      });
+class Palette {
+  constructor() {
+    this._availableActions = {
+      video: false,
+      upload: false,
+      input: false,
     };
-  });
 
-  p.catch(err => {
-    console.log(err.name);
-  });
-};
+    this._currentAction = false;
 
-const addColour = (pixel) => {
-  const currentContainer = actionContainer.querySelector(':first-child');
-
-  const colour = document.createElement('div');
-  colour.className = 'colour colour--large';
-  colour.style.backgroundColor = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
-  colour.dataset.r = pixel[0];
-  colour.dataset.g = pixel[1];
-  colour.dataset.b = pixel[2];
-
-  lastColourRGB = {
-    r: pixel[0],
-    g: pixel[1],
-    b: pixel[2],
-  };
-
-  const firstColour = colourContainer.firstChild;
-
-  const buildClickSwapListener = (el) => {
-    return () => {
-      requestAnimationFrame(() => {
-        const currentFirstColour = colourContainer.firstChild;
-        const firstColourClass = currentFirstColour.className;
-        const firstColourTransform = currentFirstColour.style.transform;
-        const elTransform = el.style.transform;
-
-        currentFirstColour.className = el.className;
-        el.className = firstColourClass;
-
-        coloursContainer.insertBefore(currentFirstColour, el);
-        colourContainer.appendChild(el);
-
-        lastColourRGB = {
-          r: el.dataset.r,
-          g: el.dataset.g,
-          b: el.dataset.b,
-        };
-
-        updateColourInfo(lastColourRGB);
-
-        if (!isFullscreenColour) {
-          const elRect = el.getBoundingClientRect();
-          const firstColourRect = currentFirstColour.getBoundingClientRect();
-
-          const xDiff = elRect.left - firstColourRect.left + elRect.width / 2 - firstColourRect.width / 2;
-          const yDiff = elRect.top - firstColourRect.top + elRect.height / 2 - firstColourRect.height / 2;
-
-          const scaleFactor = elRect.width / firstColourRect.width;
-
-          el.style.transform = `scale(${1 / scaleFactor}) `
-          + `translateX(${-xDiff * scaleFactor}px) `
-          + `translateY(${-yDiff * scaleFactor}px) `;
-
-          currentFirstColour.style.transform = `scale(${scaleFactor}) `
-          + `translateX(${xDiff / scaleFactor}px) `
-          + `translateY(${yDiff / scaleFactor}px) `;
-
-          requestAnimationFrame(() => {
-            el.classList.add('colour--animate--nodelay', 'colour--show');
-            currentFirstColour.classList.add('colour--animate--nodelay', 'colour--show');
-            el.style.transform = firstColourTransform;
-            currentFirstColour.style.transform = elTransform;
-          });
-        } else {
-          el.style.transform = firstColourTransform;
-          currentFirstColour.style.transform = elTransform;
-        }
-      });
+    this._ui = {
+      vars: {
+        size: 150,
+      },
+      elements: {},
+      events: {},
     };
-  };
-
-  if (firstColour) {
-    firstColour.classList.remove('colour--large');
-    firstColour.classList.remove('colour--');
-    coloursContainer.insertBefore(firstColour, coloursContainer.firstChild);
-
-    if (coloursContainer.children.length > maxColours) {
-      // set to previous colour so colour inherited by
-      // :after pseudo element background colour (css uses currentColor)
-      coloursContainer.children[maxColours - 1].style.color = coloursContainer.children[maxColours].style.backgroundColor;
-      coloursContainer.removeChild(coloursContainer.children[maxColours]);
-    }
   }
 
-  colour.addEventListener('click', buildClickSwapListener(colour));
+  init() {
+    const promises = [];
 
-  colourContainer.appendChild(colour);
+    this.initUI();
 
-  const otherColours = [...coloursContainer.childNodes];
+    promises.push(this.initActions());
 
-  colour.addEventListener('transitionend', event => {
-    if (event.propertyName === 'transform') {
-      colour.classList.remove('colour--animate', 'colour--animate--nodelay');
+    return Promise.all(promises);
+  }
 
-      updateColourInfo(lastColourRGB);
-    }
-  });
+  getAvailableActions() {
+    return this._availableActions;
+  }
 
-  otherColours.forEach((otherColour, index) => {
-    otherColour.addEventListener('transitionend', event => {
+  initActions() {
+    const promises = [];
+
+    promises.push(this.initVideoAction()
+      .then(result => {
+        this._availableActions.video = result;
+      })
+      .catch(err => {
+        this._availableActions.video = false;
+      }));
+
+    promises.push(this.initUploadAction().then(result => {
+      this._availableActions.upload = result;
+    }));
+
+    promises.push(this.initInputAction().then(result => {
+      this._availableActions.input = result;
+    }));
+
+    return Promise.all(promises).then(() => {
+      let numDisabled = 0;
+
+      if (!this._availableActions.video) {
+        this._ui.elements.actionContainer.removeChild(this._ui.elements.videoContainer);
+        numDisabled++;
+      } else {
+        this._ui.elements.video.src = window.URL.createObjectURL(this._availableActions.video);
+        this._ui.elements.video.onloadedmetadata = () => {
+          this._ui.elements.video.play();
+
+          const previewSize = this._ui.elements.video.offsetWidth;
+
+          let biggestSide;
+          let smallestSide;
+          let aspectRatio;
+
+          if (this._ui.elements.video.videoHeight > this._ui.elements.video.videoWidth) {
+            biggestSide = 'height';
+            smallestSide = 'width';
+            aspectRatio = this._ui.elements.video.videoHeight / this._ui.elements.video.videoWidth;
+          } else {
+            biggestSide = 'width';
+            smallestSide = 'height';
+            aspectRatio = this._ui.elements.video.videoWidth / this._ui.elements.video.videoHeight;
+          }
+
+          const offset =
+            Math.abs(this._ui.elements.video.videoHeight - this._ui.elements.video.videoWidth) / 2;
+
+          this._ui.elements.video.style[biggestSide] =
+            this._ui.elements.canvas.style[biggestSide] = `${previewSize * aspectRatio}px`;
+
+          this._ui.elements.canvas[biggestSide] = previewSize * aspectRatio;
+          this._ui.elements.canvas[smallestSide] = previewSize;
+
+          this._ui.elements.videoButton.addEventListener('click', () => {
+            this._ui.elements.videoButton.classList.add('hide');
+            this._ui.elements.canvasContext.drawImage(this._ui.elements.video,
+              biggestSide === 'height' ? 0 : offset,
+              biggestSide === 'width' ? 0 : offset,
+              biggestSide === 'height' ?
+                this._ui.elements.video.videoWidth :
+                this._ui.elements.video.videoHeight,
+              biggestSide === 'height' ?
+                this._ui.elements.video.videoWidth :
+                this._ui.elements.video.videoHeight,
+              0,
+              0,
+              previewSize,
+              previewSize
+            );
+            const pixel = this._ui.elements.canvasContext
+              .getImageData(previewSize / 2, previewSize / 2, 1, 1)
+              .data;
+
+            // pixel[0] = getRandom(0, 255);
+            // pixel[1] = getRandom(0, 255);
+            // pixel[2] = getRandom(0, 255);
+
+            this.addColour(pixel);
+          });
+        };
+      }
+
+      if (!this._availableActions.upload) {
+        this._ui.elements.actionContainer.removeChild(this._ui.elements.uploadContainer);
+        numDisabled++;
+      }
+      if (!this._availableActions.input) {
+        this._ui.elements.actionContainer.removeChild(this._ui.elements.inputContainer);
+        numDisabled++;
+      }
+
+      if (numDisabled > 1) {
+        this._ui.elements.btnSource.parentNode.removeChild(this._ui.elements.btnSource);
+      }
+    });
+  }
+
+  initVideoAction() {
+    return Promise.resolve().then(() => {
+      if (!navigator || !navigator.mediaDevices) {
+        return false;
+      }
+
+      return navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: 'environment',
+        },
+      });
+    });
+  }
+
+  initUploadAction() {
+    return Promise.resolve().then(() => !!FileReader);
+  }
+
+  initInputAction() {
+    return Promise.resolve().then(() => true);
+  }
+
+  initUI() {
+    this._ui.elements.video = document.querySelector('video');
+    this._ui.elements.videoContainer = document.querySelector('.video-container');
+    this._ui.elements.uploadContainer = document.querySelector('.upload-container');
+    this._ui.elements.inputContainer = document.querySelector('.input-container');
+    this._ui.elements.videoButton = this._ui.elements.videoContainer.querySelector('button');
+    this._ui.elements.canvas = document.querySelector('canvas');
+    this._ui.elements.canvasContext = this._ui.elements.canvas.getContext('2d');
+    this._ui.elements.colourContainer = document.querySelector('.colour-container');
+    this._ui.elements.coloursContainer = document.querySelector('.colours-container');
+    this._ui.elements.colourRGB = document.querySelector('.colour-rgb');
+    this._ui.elements.colourHex = document.querySelector('.colour-hex');
+    this._ui.elements.fileUpload = document.querySelector('.file-upload');
+    this._ui.elements.actionContainer = document.querySelector('.action-container');
+    this._ui.elements.btnSource = document.querySelector('.btn--source');
+    this._ui.elements.inputForm = document.querySelector('.input-container form');
+
+    this._ui.elements.inputForm.addEventListener('submit', event => {
+      event.preventDefault();
+      const pixel = event.target.colour.value.split(',').map(col => parseInt(col.trim(), 10));
+      this.addColour(pixel);
+    });
+
+    this._ui.elements.fileUpload.addEventListener('change', event => {
+      const data = event.target.files[0];
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        const image = new Image();
+        image.src = reader.result;
+
+        this._ui.elements.canvasContext.drawImage(image, 0, 0);
+
+        const pixel = this._ui.elements.canvasContext
+          .getImageData(
+            this._ui.elements.canvas.width / 2,
+            this._ui.elements.canvas.height / 2,
+            1,
+            1
+          )
+          .data;
+
+        this.addColour(pixel);
+      });
+      reader.readAsDataURL(data);
+    });
+
+    this._ui.events.switchAction = (element) => {
+      element.classList.add('animate-container');
+      element.style.transform = `translateX(-${this._ui.vars.size}px)`;
+    };
+
+    this._ui.events.actionEndTransition = (element) => {
+      element.classList.remove('animate-container');
+
+      requestAnimationFrame(() => {
+        element.style.transform = '';
+        element.appendChild(element.children[0]);
+        // video.play();
+      });
+    };
+
+    this._ui.elements.btnSource.addEventListener('click', event => {
+      event.preventDefault();
+      this._ui.events.switchAction(this._ui.elements.actionContainer);
+    });
+
+    this._ui.elements.actionContainer.addEventListener('transitionend', event => {
       if (event.propertyName === 'transform') {
-        otherColour.classList.remove('colour--animate', 'colour--animate--nodelay');
-        otherColour.classList.remove('colour--hide');
-        if (index === otherColours.length - 1) {
-          otherColour.classList.add('colour--hide');
-        }
+        this._ui.events.actionEndTransition(this._ui.elements.actionContainer);
+        this._ui.elements.video.play();
       }
     });
-  });
+  }
 
-  requestAnimationFrame(() => {
-    const colourRect = colour.getBoundingClientRect();
-    const currentContainerRect = currentContainer.getBoundingClientRect();
+  addColour(pixel) {
+    console.log(pixel);
+  }
+}
 
-    const scaleFactor = currentContainerRect.width / colourRect.width;
-    const xDiff = currentContainerRect.left
-      - colourRect.left
-      + currentContainerRect.width / 2
-      - colourRect.width / 2;
+const paletteApp = new Palette();
 
-    const yDiff = currentContainerRect.top
-      - colourRect.top
-      + currentContainerRect.height / 2
-      - colourRect.height / 2;
-
-    colour.style.transform = `scale(${scaleFactor}) `
-    + `translateX(${xDiff / scaleFactor}px) `
-    + `translateY(${yDiff / scaleFactor}px) `;
-
-    /* ///////////////////////////////////////// */
-
-    if (firstColour) {
-      const firstColourRect = firstColour.getBoundingClientRect();
-      // colourRect
-
-      const scaleFactorMini = colourRect.width / firstColourRect.width;
-      const xDiffMini = colourRect.left
-        - firstColourRect.left
-        + colourRect.width / 2
-        - firstColourRect.width / 2;
-
-      const yDiffMini = colourRect.top
-        - firstColourRect.top
-        + colourRect.height / 2
-        - firstColourRect.height / 2;
-
-      firstColour.style.transform = `scale(${scaleFactorMini}) `
-      + `translateX(${xDiffMini / scaleFactorMini}px) `
-      + `translateY(${yDiffMini / scaleFactorMini}px) `;
-    }
-
-    if (otherColours.length > 1) {
-      const otherColourRect = otherColours[1].getBoundingClientRect();
-      otherColours.forEach((otherColour, index) => {
-        if (index > 0) {
-          otherColour.style.transform = `translateX(-${otherColourRect.width}px)`;
-        }
-      });
-    }
-
-    /* ///////////////////////////////////////// */
-
-    requestAnimationFrame(() => {
-      colour.classList.add('colour--animate', 'colour--show');
-      colour.style.transform = '';
-
-      if (firstColour) {
-        firstColour.classList.add('colour--animate', 'colour--show');
-        firstColour.style.transform = '';
-      }
-
-      otherColours.forEach((otherColour, index) => {
-        if (index > 0) {
-          otherColour.classList.add('colour--animate', 'colour--show');
-          otherColour.style.transform = '';
-        }
-      });
-    });
-  });
-};
-
-init();
+paletteApp.init().then(() => {
+  console.log('done', paletteApp.getAvailableActions());
+});
