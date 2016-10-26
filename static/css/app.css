@@ -104,7 +104,7 @@ video, .action, .video-container, .upload-container, .input-container, canvas {
 }
 
 canvas {
-  // display: none;
+  display: none;
 }
 
 .btn {
@@ -119,15 +119,13 @@ canvas {
   outline: none;
 }
 
-.colour {
+.sample{
   position: relative;
   display: inline-block;
   flex-shrink: 0;
   height: 50px;
   width: 50px;
   border-radius: 50px;
-
-  opacity: 0;
   color: transparent;
 }
 
@@ -163,25 +161,32 @@ canvas {
     transition: transform 0.3s ease-in-out 0s;
   }
 
-  .colour--fullscreen {
-    // transform: scale(10);
-  }
-
-.colour-container, .colours-container {
+.sample-container, .samples-container {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
 }
 
-.colour-container {
+.sample-container {
   margin: 1rem auto;
   width: 75px;
   height: 75px;
   border-radius: 75px;
-  // border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.colours-container .colour:last-child:after {
+  .sample-container .sample {
+    width: 75px;
+    height: 75px;
+    border-radius: 75px;
+  }
+
+  .sample-container .sample--fullscreen {
+    width: 500px;
+    height: 500px;
+    border-radius: 500px;
+  }
+
+.samples-container .colour:last-child:after {
   position: absolute;
   top: 0;
   left: 50px;

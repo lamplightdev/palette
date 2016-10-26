@@ -11,6 +11,7 @@ class Palette {
     this._ui = {
       vars: {
         size: 150,
+        maxSamples: 5,
       },
       elements: {},
       events: {},
@@ -110,7 +111,7 @@ class Palette {
             // pixel[1] = getRandom(0, 255);
             // pixel[2] = getRandom(0, 255);
 
-            this.addColour(pixel);
+            this.pushSample(pixel);
           });
         };
       }
@@ -161,10 +162,10 @@ class Palette {
     this._ui.elements.videoButton = this._ui.elements.videoContainer.querySelector('button');
     this._ui.elements.canvas = document.querySelector('canvas');
     this._ui.elements.canvasContext = this._ui.elements.canvas.getContext('2d');
-    this._ui.elements.colourContainer = document.querySelector('.colour-container');
-    this._ui.elements.coloursContainer = document.querySelector('.colours-container');
-    this._ui.elements.colourRGB = document.querySelector('.colour-rgb');
-    this._ui.elements.colourHex = document.querySelector('.colour-hex');
+    this._ui.elements.sampleContainer = document.querySelector('.sample-container');
+    this._ui.elements.samplesContainer = document.querySelector('.samples-container');
+    this._ui.elements.sampleRGB = document.querySelector('.sample-rgb');
+    this._ui.elements.sampleHex = document.querySelector('.sample-hex');
     this._ui.elements.fileUpload = document.querySelector('.file-upload');
     this._ui.elements.actionContainer = document.querySelector('.action-container');
     this._ui.elements.btnSource = document.querySelector('.btn--source');
@@ -173,7 +174,7 @@ class Palette {
     this._ui.elements.inputForm.addEventListener('submit', event => {
       event.preventDefault();
       const pixel = event.target.colour.value.split(',').map(col => parseInt(col.trim(), 10));
-      this.addColour(pixel);
+      this.pushSample(pixel);
     });
 
     this._ui.elements.fileUpload.addEventListener('change', event => {
@@ -194,41 +195,77 @@ class Palette {
           )
           .data;
 
-        this.addColour(pixel);
+        this.pushSample(pixel);
       });
       reader.readAsDataURL(data);
     });
 
-    this._ui.events.switchAction = (element) => {
-      element.classList.add('animate-container');
-      element.style.transform = `translateX(-${this._ui.vars.size}px)`;
-    };
-
-    this._ui.events.actionEndTransition = (element) => {
-      element.classList.remove('animate-container');
-
-      requestAnimationFrame(() => {
-        element.style.transform = '';
-        element.appendChild(element.children[0]);
-        // video.play();
-      });
-    };
-
     this._ui.elements.btnSource.addEventListener('click', event => {
       event.preventDefault();
-      this._ui.events.switchAction(this._ui.elements.actionContainer);
-    });
 
-    this._ui.elements.actionContainer.addEventListener('transitionend', event => {
-      if (event.propertyName === 'transform') {
-        this._ui.events.actionEndTransition(this._ui.elements.actionContainer);
-        this._ui.elements.video.play();
-      }
+      this._ui.elements.actionContainer.appendChild(this._ui.elements.actionContainer.children[0]);
+      this._ui.elements.video.play();
     });
   }
 
-  addColour(pixel) {
-    console.log(pixel);
+  pushSample(pixel) {
+    const sample = this.createSample(pixel);
+
+    sample.addEventListener('click', () => {
+      if (sample.parentNode === this._ui.elements.samplesContainer) {
+        const mainSample = this._ui.elements.sampleContainer.firstChild;
+        const mainSampleClassName = mainSample.className;
+
+        this._ui.elements.samplesContainer.insertBefore(mainSample, sample);
+        this._ui.elements.sampleContainer.appendChild(sample);
+
+
+        mainSample.className = sample.className;
+        sample.className = mainSampleClassName;
+
+        this.updateSampleData([
+          sample.dataset.r,
+          sample.dataset.g,
+          sample.dataset.b,
+        ]);
+      } else if (sample.parentNode === this._ui.elements.sampleContainer) {
+        if (sample.classList.contains('sample--fullscreen')) {
+          sample.classList.remove('sample--fullscreen');
+        } else {
+          sample.classList.add('sample--fullscreen');
+        }
+      }
+    });
+
+    const currentSample = this._ui.elements.sampleContainer.firstChild;
+    if (currentSample) {
+      this._ui.elements.samplesContainer
+        .insertBefore(currentSample, this._ui.elements.samplesContainer.children[0]);
+    }
+    this._ui.elements.sampleContainer.appendChild(sample);
+
+    if (this._ui.elements.samplesContainer.children.length > this._ui.vars.maxSamples) {
+      this._ui.elements.samplesContainer
+        .removeChild(this._ui.elements.samplesContainer.children[this._ui.vars.maxSamples]);
+    }
+
+    this.updateSampleData(pixel);
+  }
+
+  createSample(pixel) {
+    const sample = document.createElement('div');
+    sample.className = 'sample';
+    sample.style.backgroundColor = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+    sample.dataset.r = pixel[0];
+    sample.dataset.g = pixel[1];
+    sample.dataset.b = pixel[2];
+
+    return sample;
+  }
+
+  updateSampleData(pixel) {
+    this._ui.elements.sampleRGB.textContent = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+    this._ui.elements.sampleHex.textContent = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
   }
 }
 
