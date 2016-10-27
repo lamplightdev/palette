@@ -238,7 +238,10 @@ class Palette {
       }
     });
 
-    const currentSamples = [...this._ui.elements.samplesContainer.children];
+    const currentSamples = [];
+    for (let i = 0; i < this._ui.elements.samplesContainer.length; i++) {
+      currentSamples.push(this._ui.elements.samplesContainer[i]);
+    }
 
     const currentSample = this._ui.elements.sampleContainer.firstChild;
     if (currentSample) {
