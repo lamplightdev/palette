@@ -152,11 +152,6 @@ canvas {
     transition: none;
   }
 
-  .colour--animate:after, .colour--animate--nodelay:after, .colour--hide:after {
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out 0.3s;
-  }
-
   .colour--animate-fullscreen {
     transition: transform 0.3s ease-in-out 0s;
   }
@@ -168,7 +163,6 @@ canvas {
 }
 
 .sample-container {
-  margin: 1rem auto;
   width: 75px;
   height: 75px;
   border-radius: 75px;
@@ -186,7 +180,7 @@ canvas {
     border-radius: 500px;
   }
 
-.samples-container .colour:last-child:after {
+.samples-container .sample:last-child:after {
   position: absolute;
   top: 0;
   left: 50px;
@@ -195,6 +189,12 @@ canvas {
   height: 50px;
   border-radius: 50px;
   background: currentColor;
+  opacity: 1;
+}
+
+.samples-container .sample.sample--last:after {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out 0s;
 }
 
 .colour-info {

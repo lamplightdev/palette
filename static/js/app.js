@@ -211,14 +211,15 @@ class Palette {
   pushSample(pixel) {
     const sample = this.createSample(pixel);
 
-    sample.addEventListener('click', () => {
+    sample.addEventListener('click', event => {
+      event.preventDefault();
+
       if (sample.parentNode === this._ui.elements.samplesContainer) {
         const mainSample = this._ui.elements.sampleContainer.firstChild;
         const mainSampleClassName = mainSample.className;
 
         this._ui.elements.samplesContainer.insertBefore(mainSample, sample);
         this._ui.elements.sampleContainer.appendChild(sample);
-
 
         mainSample.className = sample.className;
         sample.className = mainSampleClassName;
@@ -237,10 +238,12 @@ class Palette {
       }
     });
 
+    const currentSamples = [...this._ui.elements.samplesContainer.children];
+
     const currentSample = this._ui.elements.sampleContainer.firstChild;
     if (currentSample) {
       this._ui.elements.samplesContainer
-        .insertBefore(currentSample, this._ui.elements.samplesContainer.children[0]);
+        .insertBefore(currentSample, currentSamples[0]);
     }
     this._ui.elements.sampleContainer.appendChild(sample);
 
@@ -250,6 +253,74 @@ class Palette {
     }
 
     this.updateSampleData(pixel);
+
+    requestAnimationFrame(() => {
+      const sourceContainerRect = this._ui.elements.videoContainer.getBoundingClientRect();
+      const targetContainerRect = this._ui.elements.sampleContainer.getBoundingClientRect();
+
+      let scale = sourceContainerRect.width / targetContainerRect.width;
+
+      let x = sourceContainerRect.left
+        - targetContainerRect.left
+        + (sourceContainerRect.width - targetContainerRect.width) / 2;
+
+      let y = sourceContainerRect.top
+        - targetContainerRect.top
+        + (sourceContainerRect.height - targetContainerRect.height) / 2;
+
+      sample.style.transform =
+        `scale(${scale}) translateX(${x / scale}px) translateY(${y / scale}px)`;
+
+      if (currentSample) {
+        const currentTargetContainerRect =
+          this._ui.elements.samplesContainer.children[0].getBoundingClientRect();
+
+        scale = targetContainerRect.width / currentTargetContainerRect.width;
+
+        x = targetContainerRect.left
+          - currentTargetContainerRect.left
+          + (targetContainerRect.width - currentTargetContainerRect.width) / 2;
+
+        y = targetContainerRect.top
+          - currentTargetContainerRect.top
+          + (targetContainerRect.height - currentTargetContainerRect.height) / 2;
+
+        currentSample.style.transform =
+          `scale(${scale}) translateX(${x / scale}px) translateY(${y / scale}px)`;
+
+        currentSample.style.color =
+          `rgb(
+            ${currentSamples[0].dataset.r},
+            ${currentSamples[0].dataset.g},
+            ${currentSamples[0].dataset.b}
+          )`;
+        currentSamples[this._ui.vars.maxSamples - 2].classList.add('sample--last');
+      }
+
+      const currentSamplesWidth = currentSamples[0].offsetWidth;
+      currentSamples.forEach(samp => {
+        samp.style.transform = `translateX(-${currentSamplesWidth}px)`;
+      });
+
+      requestAnimationFrame(() => {
+        sample.style.transition = 'transform 0.3s ease-in-out 0s';
+        sample.style.transform = '';
+
+        if (currentSample) {
+          currentSample.style.transition = 'transform 0.3s ease-in-out 0s';
+          currentSample.style.transform = '';
+        }
+
+        currentSamples.forEach(samp => {
+          samp.style.transition = 'transform 0.3s ease-in-out 0s';
+          samp.style.transform = '';
+        });
+      });
+    });
+
+    sample.addEventListener('transitionend', event => {
+      sample.style.transition = '';
+    });
   }
 
   createSample(pixel) {
