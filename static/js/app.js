@@ -12,10 +12,15 @@ class Palette {
       vars: {
         size: 150,
         maxSamples: 5,
+        count: 5,
+        duration: 0.4,
+        maxDimension: Math.max(window.innerWidth, window.innerHeight),
       },
       elements: {},
       events: {},
     };
+
+    this._animationBatch = [];
   }
 
   init() {
@@ -59,6 +64,7 @@ class Palette {
         numDisabled++;
       } else {
         this._ui.elements.video.src = window.URL.createObjectURL(this._availableActions.video);
+
         this._ui.elements.video.onloadedmetadata = () => {
           this._ui.elements.video.play();
 
@@ -107,10 +113,6 @@ class Palette {
               .getImageData(previewSize / 2, previewSize / 2, 1, 1)
               .data;
 
-            // pixel[0] = getRandom(0, 255);
-            // pixel[1] = getRandom(0, 255);
-            // pixel[2] = getRandom(0, 255);
-
             this.pushSample(pixel);
           });
         };
@@ -155,6 +157,11 @@ class Palette {
   }
 
   initUI() {
+    this.initUIElements();
+    this.initUIEvents();
+  }
+
+  initUIElements() {
     this._ui.elements.video = document.querySelector('video');
     this._ui.elements.videoContainer = document.querySelector('.video-container');
     this._ui.elements.uploadContainer = document.querySelector('.upload-container');
@@ -170,7 +177,9 @@ class Palette {
     this._ui.elements.actionContainer = document.querySelector('.action-container');
     this._ui.elements.btnSource = document.querySelector('.btn--source');
     this._ui.elements.inputForm = document.querySelector('.input-container form');
+  }
 
+  initUIEvents() {
     this._ui.elements.inputForm.addEventListener('submit', event => {
       event.preventDefault();
       const pixel = event.target.colour.value.split(',').map(col => parseInt(col.trim(), 10));
@@ -217,23 +226,44 @@ class Palette {
       if (sample.parentNode === this._ui.elements.samplesContainer) {
         const mainSample = this._ui.elements.sampleContainer.firstChild;
         const mainSampleClassName = mainSample.className;
+        const mainSampleTransform = mainSample.style.transform;
 
         this._ui.elements.samplesContainer.insertBefore(mainSample, sample);
         this._ui.elements.sampleContainer.appendChild(sample);
 
         mainSample.className = sample.className;
+        mainSample.style.transform = sample.style.transform;
         sample.className = mainSampleClassName;
+        sample.style.transform = mainSampleTransform;
 
         this.updateSampleData([
           sample.dataset.r,
           sample.dataset.g,
           sample.dataset.b,
         ]);
+
+        if (!sample.classList.contains('sample--fullscreen')) {
+          this.pushAnimation(
+            sample,
+            mainSample,
+            `transform ${this._ui.vars.duration}s ease-in-out 0s`
+          );
+
+          this.pushAnimation(
+            mainSample,
+            sample,
+            `transform ${this._ui.vars.duration}s ease-in-out 0s`
+          );
+
+          this.runAnimation();
+        }
       } else if (sample.parentNode === this._ui.elements.sampleContainer) {
         if (sample.classList.contains('sample--fullscreen')) {
           sample.classList.remove('sample--fullscreen');
+          sample.style.transform = '';
         } else {
           sample.classList.add('sample--fullscreen');
+          sample.style.transform = `scale(${Math.ceil(this._ui.vars.maxDimension / 50) * 2})`;
         }
       }
     });
@@ -257,77 +287,42 @@ class Palette {
 
     this.updateSampleData(pixel);
 
-    requestAnimationFrame(() => {
-      const sourceContainerRect = this._ui.elements.videoContainer.getBoundingClientRect();
-      const targetContainerRect = this._ui.elements.sampleContainer.getBoundingClientRect();
+    this.pushAnimation(
+      sample,
+      this._ui.elements.videoContainer,
+      `transform ${this._ui.vars.duration}s ease-in-out 0.2s`
+    );
 
-      let scale = sourceContainerRect.width / targetContainerRect.width;
+    if (currentSample) {
+      this.pushAnimation(
+        currentSample,
+        this._ui.elements.sampleContainer,
+        `transform ${this._ui.vars.duration}s ease-in-out 0s`
+      );
 
-      let x = sourceContainerRect.left
-        - targetContainerRect.left
-        + (sourceContainerRect.width - targetContainerRect.width) / 2;
+      currentSample.style.color =
+        `rgb(
+          ${currentSamples[0].dataset.r},
+          ${currentSamples[0].dataset.g},
+          ${currentSamples[0].dataset.b}
+        )`;
+    }
 
-      let y = sourceContainerRect.top
-        - targetContainerRect.top
-        + (sourceContainerRect.height - targetContainerRect.height) / 2;
-
-      sample.style.transform =
-        `scale(${scale}) translateX(${x / scale}px) translateY(${y / scale}px)`;
-
-      if (currentSample) {
-        const currentTargetContainerRect =
-          this._ui.elements.samplesContainer.children[0].getBoundingClientRect();
-
-        scale = targetContainerRect.width / currentTargetContainerRect.width;
-
-        x = targetContainerRect.left
-          - currentTargetContainerRect.left
-          + (targetContainerRect.width - currentTargetContainerRect.width) / 2;
-
-        y = targetContainerRect.top
-          - currentTargetContainerRect.top
-          + (targetContainerRect.height - currentTargetContainerRect.height) / 2;
-
-        currentSample.style.transform =
-          `scale(${scale}) translateX(${x / scale}px) translateY(${y / scale}px)`;
-
-        currentSample.style.color =
-          `rgb(
-            ${currentSamples[0].dataset.r},
-            ${currentSamples[0].dataset.g},
-            ${currentSamples[0].dataset.b}
-          )`;
-        currentSamples[this._ui.vars.maxSamples - 2].classList.add('sample--last');
-      }
-
-      const currentSamplesWidth = currentSamples[0].offsetWidth;
-      currentSamples.forEach(samp => {
-        samp.style.transform = `translateX(-${currentSamplesWidth}px)`;
-      });
-
-      requestAnimationFrame(() => {
-        sample.style.transition = 'transform 0.3s ease-in-out 0s';
-        sample.style.transform = '';
-
-        if (currentSample) {
-          currentSample.style.transition = 'transform 0.3s ease-in-out 0s';
-          currentSample.style.transform = '';
-        }
-
-        currentSamples.forEach(samp => {
-          samp.style.transition = 'transform 0.3s ease-in-out 0s';
-          samp.style.transform = '';
-        });
-      });
+    currentSamples.forEach(samp => {
+      this.pushAnimation(
+        samp,
+        'translateX(-50px)',
+        `transform ${this._ui.vars.duration}s ease-in-out 0s`
+      );
     });
 
-    sample.addEventListener('transitionend', event => {
-      sample.style.transition = '';
-    });
+    this.runAnimation();
   }
 
   createSample(pixel) {
     const sample = document.createElement('div');
+    this._ui.vars.count++;
+    sample.id = `sample-${this._ui.vars.count}`;
     sample.className = 'sample';
     sample.style.backgroundColor = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
     sample.dataset.r = pixel[0];
@@ -340,6 +335,70 @@ class Palette {
   updateSampleData(pixel) {
     this._ui.elements.sampleRGB.textContent = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
     this._ui.elements.sampleHex.textContent = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+  }
+
+  pushAnimation(element, from, transition) {
+    this._animationBatch.push({
+      element,
+      from,
+      transition,
+    });
+  }
+
+  runAnimation() {
+    const rects = {};
+
+    requestAnimationFrame(() => {
+      this._animationBatch.forEach(animation => {
+        if (animation.from.tagName) {
+          // is DOM element
+          if (!rects[animation.from.id]) {
+            rects[animation.from.id] = animation.from.getBoundingClientRect();
+          }
+          const fromRect = rects[animation.from.id];
+
+          if (!rects[animation.element.id]) {
+            rects[animation.element.id] = animation.element.getBoundingClientRect();
+          }
+          const toRect = rects[animation.element.id];
+
+          const scale = fromRect.width / toRect.width;
+
+          const x = fromRect.left
+            - toRect.left
+            + (fromRect.width - toRect.width) / 2;
+
+          const y = fromRect.top
+            - toRect.top
+            + (fromRect.height - toRect.height) / 2;
+
+          animation.element.style.transform =
+            `scale(${scale}) translateX(${x / scale}px) translateY(${y / scale}px)`;
+        } else {
+          // is transform string
+          animation.element.style.transform = animation.from;
+        }
+      });
+
+      this._ui.elements.samplesContainer.children[this._ui.vars.maxSamples - 1].classList.add('sample--last');
+
+      requestAnimationFrame(() => {
+        this._animationBatch.forEach(animation => {
+          animation.element.style.transition = animation.transition;
+          animation.element.style.transform = '';
+        });
+
+        this._animationBatch = [];
+      });
+
+      this._animationBatch.forEach(animation => {
+        animation.onend = () => {
+          animation.element.style.transition = '';
+          animation.element.removeEventListener('transitionend', animation.onend);
+        };
+        animation.element.addEventListener('transitionend', animation.onend);
+      });
+    });
   }
 }
 

@@ -62,7 +62,7 @@ video, .action, .video-container, .upload-container, .input-container, canvas {
 }
 
 .animate-container {
-  transition: transform 0.3s ease-out 0s;
+  // transition: transform 0.3s ease-out 0s;
 }
 
 .container {
@@ -140,11 +140,11 @@ canvas {
   }
 
   .colour--animate {
-    transition: opacity 0.2s ease-in-out 0s, transform 0.3s ease-in-out 0.2s;
+    //transition: opacity 0.2s ease-in-out 0s, transform 0.3s ease-in-out 0.2s;
   }
 
   .colour--animate--nodelay {
-    transition: opacity 0.2s ease-in-out 0s, transform 0.3s ease-in-out 0s;
+    //transition: opacity 0.2s ease-in-out 0s, transform 0.3s ease-in-out 0s;
   }
 
   .colour:after {
@@ -153,7 +153,7 @@ canvas {
   }
 
   .colour--animate-fullscreen {
-    transition: transform 0.3s ease-in-out 0s;
+    //transition: transform 0.3s ease-in-out 0s;
   }
 
 .sample-container, .samples-container {
@@ -174,12 +174,6 @@ canvas {
     border-radius: 75px;
   }
 
-  .sample-container .sample--fullscreen {
-    width: 500px;
-    height: 500px;
-    border-radius: 500px;
-  }
-
 .samples-container .sample:last-child:after {
   position: absolute;
   top: 0;
@@ -194,7 +188,7 @@ canvas {
 
 .samples-container .sample.sample--last:after {
   opacity: 0;
-  transition: opacity 0.3s ease-in-out 0s;
+  transition: opacity 0.4s ease-in-out 0s;
 }
 
 .colour-info {
