@@ -212,8 +212,21 @@ class Palette {
     this._ui.elements.btnSource.addEventListener('click', event => {
       event.preventDefault();
 
-      this._ui.elements.actionContainer.appendChild(this._ui.elements.actionContainer.children[0]);
-      this._ui.elements.video.play();
+      this._ui.elements.actionContainer.style.left = '-150px';
+      this.pushAnimation(
+        this._ui.elements.actionContainer,
+        'translateX(150px)',
+        `transform ${this._ui.vars.duration}s ease-in-out 0s`,
+        () => {
+          this._ui.elements.actionContainer.appendChild(
+            this._ui.elements.actionContainer.children[0]
+          );
+          this._ui.elements.actionContainer.style.left = '';
+          this._ui.elements.video.play();
+        }
+      );
+
+      this.runAnimation();
     });
   }
 
@@ -337,11 +350,12 @@ class Palette {
     this._ui.elements.sampleHex.textContent = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
   }
 
-  pushAnimation(element, from, transition) {
+  pushAnimation(element, from, transition, onTransitionEnd = null) {
     this._animationBatch.push({
       element,
       from,
       transition,
+      onTransitionEnd
     });
   }
 
@@ -392,11 +406,15 @@ class Palette {
       });
 
       this._animationBatch.forEach(animation => {
-        animation.onend = () => {
+        animation.transitionEnd = () => {
           animation.element.style.transition = '';
-          animation.element.removeEventListener('transitionend', animation.onend);
+          animation.element.removeEventListener('transitionend', animation.transitionEnd);
+
+          if (animation.onTransitionEnd) {
+            animation.onTransitionEnd();
+          }
         };
-        animation.element.addEventListener('transitionend', animation.onend);
+        animation.element.addEventListener('transitionend', animation.transitionEnd);
       });
     });
   }
