@@ -10,7 +10,7 @@ class Palette {
 
     this._ui = {
       vars: {
-        size: 150,
+        size: 200,
         maxSamples: 5,
         count: 5,
         duration: 0.4,
@@ -177,6 +177,8 @@ class Palette {
     this._ui.elements.actionContainer = document.querySelector('.action-container');
     this._ui.elements.btnSource = document.querySelector('.btn--source');
     this._ui.elements.inputForm = document.querySelector('.input-container form');
+    this._ui.elements.colourBarHeading = document.querySelector('.colour-bar > h1');
+    this._ui.elements.colourBarDivs = document.querySelectorAll('.colour-bar > div');
   }
 
   initUIEvents() {
@@ -212,10 +214,10 @@ class Palette {
     this._ui.elements.btnSource.addEventListener('click', event => {
       event.preventDefault();
 
-      this._ui.elements.actionContainer.style.left = '-150px';
+      this._ui.elements.actionContainer.style.left = `-${this._ui.vars.size}px`;
       this.pushAnimation(
         this._ui.elements.actionContainer,
-        'translateX(150px)',
+        `translateX(${this._ui.vars.size}px)`,
         `transform ${this._ui.vars.duration}s ease-in-out 0s`,
         () => {
           this._ui.elements.actionContainer.appendChild(
@@ -346,6 +348,12 @@ class Palette {
   }
 
   updateSampleData(pixel) {
+    this._ui.elements.colourBarHeading.style.color = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+
+    for (let i = 0; i < this._ui.elements.colourBarDivs.length; i++) {
+      this._ui.elements.colourBarDivs[i].style.backgroundColor = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+    }
+
     this._ui.elements.sampleRGB.textContent = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
     this._ui.elements.sampleHex.textContent = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
   }

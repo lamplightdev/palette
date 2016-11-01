@@ -15,14 +15,70 @@
 body {
   font-family: Roboto, Arial, sans-serif;
   font-size: 12px;
+  color: #333;
   font-weight: 400;
   overflow: hidden;
+  margin: 0;
 }
 
-h1 {
-  text-align: center;
-  font-weight: 400;
+.colour-bar {
+  position: relative;
+  z-index: 10;
+  height: 4rem;
+  background: white;
 }
+
+  .colour-bar > div {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: #2196F3;
+    opacity: 0.3;
+  }
+
+  .colour-bar h1 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    margin-left: 2rem;
+    color: #2196F3;
+    font-weight: 400;
+  }
+
+  .colour-bar > div:nth-child(9) {
+    width: calc(100% / 1.6 / 1.6 / 1.6 / 1.6 / 1.6 / 1.6 / 2);
+    opacity: 1;
+  }
+
+  .colour-bar > div:nth-child(8) {
+    width: calc(100% / 1.6 / 1.6 / 1.6 / 1.6 / 1.6 / 1.6);
+  }
+
+  .colour-bar > div:nth-child(7) {
+    width: calc(100% / 1.6 / 1.6 / 1.6 / 1.6 / 1.6);
+  }
+
+  .colour-bar > div:nth-child(6) {
+    width: calc(100% / 1.6 / 1.6 / 1.6 / 1.6);
+  }
+
+  .colour-bar > div:nth-child(5) {
+    width: calc(100% / 1.6 / 1.6 / 1.6);
+  }
+
+  .colour-bar > div:nth-child(4) {
+    width: calc(100% / 1.6 / 1.6);
+  }
+
+  .colour-bar > div:nth-child(3) {
+    width: calc(100% / 1.6);
+  }
+
+  .colour-bar > div:nth-child(2) {
+    width: calc(100%);
+  }
 
 .outer {
   max-width: 600px;
@@ -37,12 +93,13 @@ button {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin: 2rem 0;
 }
 
 video, .action, .video-container, .upload-container, .input-container, canvas {
   position: relative;
-  width: 150px;
-  height: 150px;
+  width: 200px;
+  height: 200px;
 }
 
 .action {
@@ -57,8 +114,8 @@ video, .action, .video-container, .upload-container, .input-container, canvas {
   position: absolute;
   top: 0;
   left: 0;
-  height: 150px;
-  width: 450px;
+  height: 200px;
+  width: 600px;
 }
 
 .animate-container {
@@ -67,7 +124,7 @@ video, .action, .video-container, .upload-container, .input-container, canvas {
 
 .container {
   background: #ddd;
-  border-radius: 150px;
+  border-radius: 200px;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -85,8 +142,8 @@ video, .action, .video-container, .upload-container, .input-container, canvas {
   position: absolute;
   top: 0;
   left: 0;
-  width: 150px;
-  height: 150px;
+  width: 200px;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -174,28 +231,35 @@ canvas {
     border-radius: 75px;
   }
 
-.samples-container .sample:last-child:after {
-  position: absolute;
-  top: 0;
-  left: 50px;
-  content: '';
-  width: 50px;
-  height: 50px;
-  border-radius: 50px;
-  background: currentColor;
-  opacity: 1;
+.samples-container {
 }
 
-.samples-container .sample.sample--last:after {
-  opacity: 0;
-  transition: opacity 0.4s ease-in-out 0s;
-}
+  .samples-container .sample {
+  }
+
+  .samples-container .sample:last-child:after {
+    position: absolute;
+    top: 0;
+    left: 50px;
+    content: '';
+    width: 50px;
+    height: 50px;
+    border-radius: 50px;
+    background: currentColor;
+    opacity: 1;
+  }
+
+  .samples-container .sample.sample--last:after {
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out 0s;
+  }
 
 .colour-info {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  margin: 2rem 0;
 }
 
 .colour-data, .colour-actions {
