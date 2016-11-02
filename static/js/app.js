@@ -113,7 +113,7 @@ class Palette {
               .getImageData(previewSize / 2, previewSize / 2, 1, 1)
               .data;
 
-            this.pushSample(pixel);
+            this.pushSample(pixel, this._ui.elements.videoContainer);
           });
         };
       }
@@ -176,7 +176,7 @@ class Palette {
     this._ui.elements.fileUpload = document.querySelector('.file-upload');
     this._ui.elements.actionContainer = document.querySelector('.action-container');
     this._ui.elements.btnSource = document.querySelector('.btn--source');
-    this._ui.elements.inputForm = document.querySelector('.input-container form');
+    this._ui.elements.inputForm = document.querySelector('.input-container');
     this._ui.elements.colourBarHeading = document.querySelector('.colour-bar > h1');
     this._ui.elements.colourBarDivs = document.querySelectorAll('.colour-bar > div');
   }
@@ -184,8 +184,25 @@ class Palette {
   initUIEvents() {
     this._ui.elements.inputForm.addEventListener('submit', event => {
       event.preventDefault();
-      const pixel = event.target.colour.value.split(',').map(col => parseInt(col.trim(), 10));
-      this.pushSample(pixel);
+
+      const value = event.target.colour.value;
+      const valid = this.parseColourText(value);
+      if (valid) {
+        event.target.colour.classList.remove('warn');
+
+        let pixel;
+
+        if (valid.type === 'rgb') {
+          pixel = valid.value;
+        } else {
+          // hex
+          pixel = this.constructor.hexToRgb(valid.value);
+        }
+
+        this.pushSample(pixel, this._ui.elements.inputContainer);
+      } else {
+        event.target.colour.classList.add('warn');
+      }
     });
 
     this._ui.elements.fileUpload.addEventListener('change', event => {
@@ -206,7 +223,7 @@ class Palette {
           )
           .data;
 
-        this.pushSample(pixel);
+        this.pushSample(pixel, this._ui.elements.uploadContainer);
       });
       reader.readAsDataURL(data);
     });
@@ -232,7 +249,7 @@ class Palette {
     });
   }
 
-  pushSample(pixel) {
+  pushSample(pixel, fromElement) {
     const sample = this.createSample(pixel);
 
     sample.addEventListener('click', event => {
@@ -304,7 +321,7 @@ class Palette {
 
     this.pushAnimation(
       sample,
-      this._ui.elements.videoContainer,
+      fromElement,
       `transform ${this._ui.vars.duration}s ease-in-out 0.2s`
     );
 
@@ -355,7 +372,7 @@ class Palette {
     }
 
     this._ui.elements.sampleRGB.textContent = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
-    this._ui.elements.sampleHex.textContent = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+    this._ui.elements.sampleHex.textContent = this.constructor.rgbToHex(pixel[0], pixel[1], pixel[2]);
   }
 
   pushAnimation(element, from, transition, onTransitionEnd = null) {
@@ -425,6 +442,75 @@ class Palette {
         animation.element.addEventListener('transitionend', animation.transitionEnd);
       });
     });
+  }
+
+  parseColourText(text) {
+    let test = text.trim();
+
+    let valid = false;
+    let type = false;
+
+    if (test.indexOf(',') > -1) {
+      // try rgb
+      const rgb = text.split(',');
+      if (rgb.length === 3 && rgb[0] && rgb[1] && rgb[2]) {
+        type = 'rgb';
+
+        valid = rgb
+          .map(part => parseInt(part.trim(), 10))
+          .map(part => {
+            if (Number.isNaN(part) || part < 0) {
+              return 0;
+            } else if (part > 255) {
+              return 255;
+            }
+
+            return part;
+          });
+      }
+    } else {
+      // try hex
+      if (test.indexOf('#') === 0) {
+        test = test.substring(1);
+      }
+
+      if (/^([a-f0-9]{3}){1,2}$/i.test(test)) {
+        type = 'hex';
+        valid = test;
+      }
+    }
+
+    if (!valid) {
+      return valid;
+    }
+
+    return {
+      type,
+      value: valid,
+    };
+  }
+
+  static partToHex(part) {
+    const hex = part.toString(16);
+    return hex.length === 1 ? `0 ${hex}` : hex;
+  }
+
+  static rgbToHex(r, g, b) {
+    return `#${this.partToHex(r)}${this.partToHex(g)}${this.partToHex(b)}`;
+  }
+
+  static hexToRgb(hex) {
+    let fullHex = hex;
+
+    if (fullHex.length === 3) {
+      fullHex = `${fullHex[0]}${fullHex[0]}${fullHex[1]}${fullHex[1]}${fullHex[2]}${fullHex[2]}`;
+    }
+
+    return [
+      parseInt(fullHex.substr(0, 2), 16),
+      parseInt(fullHex.substr(2, 2), 16),
+      parseInt(fullHex.substr(4, 2), 16),
+    ];
   }
 }
 

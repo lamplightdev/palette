@@ -15,11 +15,75 @@
 body {
   font-family: Roboto, Arial, sans-serif;
   font-size: 12px;
-  color: #333;
+  color: #444;
   font-weight: 400;
   overflow: hidden;
   margin: 0;
 }
+
+canvas {
+  display: none;
+}
+
+a {
+  color: #888;
+  padding-bottom: 0.1rem;
+  text-decoration: none;
+}
+
+  a:hover {
+    color: #444;
+    border-bottom: 1px solid #444;
+  }
+
+
+.btn {
+  border: 0;
+  background: transparent;
+  height: 50px;
+  width: 50px;
+  border-radius: 50px;
+  padding: 0;
+  margin: 0;
+  outline: none;
+}
+
+input[type=text] {
+  border: 0;
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  text-align: center;
+  background: white;
+  border: 2px solid white;
+  outline: none;
+}
+
+  input[type=text]:focus {
+    border-color: #444;
+  }
+
+  input[type=text].warn {
+    border-color: #F44336;
+  }
+
+main {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+footer {
+  font-size: 0.8rem;
+  text-align: center;
+  margin-top: 2rem;
+  padding: 1rem;
+}
+
+  footer a {
+    margin: 0 0.5em;
+  }
 
 .colour-bar {
   position: relative;
@@ -80,15 +144,6 @@ body {
   .colour-bar > div:nth-child(2) {
     width: calc(100%);
   }
-
-.outer {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-button {
-
-}
 
 .main {
   display: flex;
@@ -161,21 +216,22 @@ video, .action, .video-container, .upload-container, .input-container, canvas {
   height: 80px;
 }
 
-canvas {
-  display: none;
+.input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
 }
 
-.btn {
-  border: 0;
-  background: transparent;
-  color: red;
-  height: 50px;
-  width: 50px;
-  border-radius: 50px;
-  padding: 0;
-  margin: 0;
-  outline: none;
-}
+  .input-container input {
+    width: 70%;
+    margin-top: 3rem;
+  }
+
+  .input-container button {
+    background: #444;
+    margin-bottom: 1rem;
+  }
 
 .sample{
   position: relative;
@@ -195,14 +251,6 @@ canvas {
 
   .colour--show {
     opacity: 1;
-  }
-
-  .colour--animate {
-    //transition: opacity 0.2s ease-in-out 0s, transform 0.3s ease-in-out 0.2s;
-  }
-
-  .colour--animate--nodelay {
-    //transition: opacity 0.2s ease-in-out 0s, transform 0.3s ease-in-out 0s;
   }
 
   .colour:after {
