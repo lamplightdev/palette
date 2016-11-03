@@ -1,3 +1,4 @@
+const template = (args) => `
 <!DOCTYPE html>
 
 <html lang="en">
@@ -8,8 +9,8 @@
 
     <title>Palette</title>
 
-    <link rel='stylesheet' href='static/css/app.css'>
-    <script src='static/js/adapter-latest.js'></script>
+    <link rel='stylesheet' href='css/app.css'>
+    <script src='js/adapter-latest.js'></script>
   </head>
 
   <body>
@@ -33,15 +34,15 @@
           <div class='action-container'>
             <div class='container video-container' id='video-container'>
                 <video></video>
-                <button><img src='static/images/touch_app.svg' alt='Take photo'></button>
+                <button><img src='images/touch_app.svg' alt='Take photo'></button>
             </div>
             <div class='container upload-container'>
               <input type='file' accept='image/*' id='imagefile' class='file-upload' name='imagefile'>
-              <label for="imagefile"><img src='static/images/file_upload.svg' alt='Upload'></label>
+              <label for="imagefile"><img src='images/file_upload.svg' alt='Upload'></label>
             </div>
             <form class='container input-container'>
               <input type='text' name='colour' placeholder='#hex or r,g,b'>
-              <button class='btn' type='submit'><img src='static/images/arrow_downward.svg' alt='Go'></button>
+              <button class='btn' type='submit'><img src='images/arrow_downward.svg' alt='Go'></button>
             </form>
           </div>
         </div>
@@ -62,7 +63,7 @@
         </div>
       </div>
 
-      <div class='samples-container'><div class='sample' id='sample-5'></div><div class='sample' id='sample-4'></div><div class='sample' id='sample-3'></div><div class='sample' id='sample-2'></div><div class='sample' id='sample-1'></div></div>
+      <div class='samples-container'>${args.colours.map(colour => `<span>${colour}</span>`)}<div class='sample' id='sample-5'></div><div class='sample' id='sample-4'></div><div class='sample' id='sample-3'></div><div class='sample' id='sample-2'></div><div class='sample' id='sample-1'></div></div>
 
       <div style='display: none;'>
         <button class='switch'>Switch</button>
@@ -80,7 +81,10 @@
       <a href='https://twitter.com/lamplightdev'>@lamplightdev</a> | <a href='https://github.com/lamplightdev/palette'>github</a>
     </footer>
 
-    <script src='static/js/app.js'></script>
+    <script src='js/app.js'></script>
   </body>
 
 </html>
+`;
+
+module.exports = template;
