@@ -269,9 +269,9 @@ class Palette {
         sample.style.transform = mainSampleTransform;
 
         this.updateSampleData([
-          sample.dataset.r,
-          sample.dataset.g,
-          sample.dataset.b,
+          parseInt(sample.dataset.r, 10),
+          parseInt(sample.dataset.g, 10),
+          parseInt(sample.dataset.b, 10),
         ]);
 
         if (!sample.classList.contains('sample--fullscreen')) {
@@ -380,7 +380,7 @@ class Palette {
       element,
       from,
       transition,
-      onTransitionEnd
+      onTransitionEnd,
     });
   }
 
