@@ -189,6 +189,14 @@ video, .action, .video-container, .upload-container, .input-container, canvas {
   z-index: 0;
 }
 
+.video-container, .upload-container {
+  display: none;
+}
+
+.container.show {
+  display: flex;
+}
+
 .video-container button {
   cursor: pointer;
   background: white;
