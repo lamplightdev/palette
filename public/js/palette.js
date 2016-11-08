@@ -6,13 +6,15 @@ class Palette {
       input: false,
     };
 
+    this._availableCameras = [];
+
     this._currentAction = false;
 
     this._ui = {
       vars: {
         size: 200,
         maxSamples: 5,
-        count: 5,
+        sampleCount: 6, // there'll always be 6 on initialisation (event if they are empty)
         duration: 0.4,
         maxDimension: Math.max(window.innerWidth, window.innerHeight),
       },
@@ -42,6 +44,7 @@ class Palette {
 
     promises.push(this.initVideoAction()
       .then(result => {
+        console.log(this._availableCameras);
         this._availableActions.video = result;
       })
       .catch(err => {
@@ -143,12 +146,39 @@ class Palette {
         return false;
       }
 
-      return navigator.mediaDevices.getUserMedia({
+      let promise;
+      if (navigator.mediaDevices.enumerateDevices) {
+        promise = navigator.mediaDevices.enumerateDevices().then(devices => {
+          devices.forEach(device => {
+            if (device.kind === 'videoinput') {
+              this._availableCameras.push(device);
+            }
+          });
+        }).catch(err => {
+          console.log('Error enumerating devices', err);
+        });
+      } else if (window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
+        promise = new Promise(resolve => {
+          window.MediaStreamTrack.getSources(sources => {
+            sources.forEach(source => {
+              if (source.kind === 'video') {
+                this._availableCameras.push(source);
+              }
+            });
+
+            resolve();
+          });
+        });
+      } else {
+        promise = Promise.resolve();
+      }
+
+      return promise.then(() => navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
           facingMode: 'environment',
         },
-      });
+      }));
     });
   }
 
@@ -189,10 +219,10 @@ class Palette {
     this._ui.elements.inputForm.addEventListener('submit', event => {
       event.preventDefault();
 
-      const value = event.target.colour.value;
+      const value = event.target.c.value;
       const valid = this.constructor.parseColourText(value);
       if (valid) {
-        event.target.colour.classList.remove('warn');
+        event.target.c.classList.remove('warn');
 
         let pixel;
 
@@ -205,7 +235,7 @@ class Palette {
 
         this.pushSample(pixel, this._ui.elements.inputContainer);
       } else {
-        event.target.colour.classList.add('warn');
+        event.target.c.classList.add('warn');
       }
     });
 
@@ -251,57 +281,72 @@ class Palette {
 
       this.runAnimation();
     });
+
+    // add event listeners for server side rendered elements
+    const existingSamples = document.querySelectorAll('.sample');
+    for (let i = 0; i < existingSamples.length; i++) {
+      const sample = existingSamples[i];
+
+      sample.addEventListener('click', event => {
+        event.preventDefault();
+
+        this._sampleClickListener(sample);
+      });
+    }
+  }
+
+  _sampleClickListener(sample) {
+    if (sample.parentNode === this._ui.elements.samplesContainer) {
+      const mainSample = this._ui.elements.sampleContainer.firstChild;
+      const mainSampleClassName = mainSample.className;
+      const mainSampleTransform = mainSample.style.transform;
+
+      this._ui.elements.samplesContainer.insertBefore(mainSample, sample);
+      this._ui.elements.sampleContainer.appendChild(sample);
+
+      mainSample.className = sample.className;
+      mainSample.style.transform = sample.style.transform;
+      sample.className = mainSampleClassName;
+      sample.style.transform = mainSampleTransform;
+
+      this.updateSampleData([
+        parseInt(sample.dataset.r, 10),
+        parseInt(sample.dataset.g, 10),
+        parseInt(sample.dataset.b, 10),
+      ]);
+
+      if (!sample.classList.contains('sample--fullscreen')) {
+        this.pushAnimation(
+          sample,
+          mainSample,
+          `transform ${this._ui.vars.duration}s ease-in-out 0s`
+        );
+
+        this.pushAnimation(
+          mainSample,
+          sample,
+          `transform ${this._ui.vars.duration}s ease-in-out 0s`
+        );
+
+        this.runAnimation();
+      }
+    } else if (sample.parentNode === this._ui.elements.sampleContainer) {
+      if (sample.classList.contains('sample--fullscreen')) {
+        sample.classList.remove('sample--fullscreen');
+        sample.style.transform = '';
+      } else {
+        sample.classList.add('sample--fullscreen');
+        sample.style.transform = `scale(${Math.ceil(this._ui.vars.maxDimension / 50) * 2})`;
+      }
+    }
   }
 
   pushSample(pixel, fromElement) {
     const sample = this.createSample(pixel);
 
-    sample.addEventListener('click', event => {
+    sample.addEventListener('click', (event) => {
       event.preventDefault();
-
-      if (sample.parentNode === this._ui.elements.samplesContainer) {
-        const mainSample = this._ui.elements.sampleContainer.firstChild;
-        const mainSampleClassName = mainSample.className;
-        const mainSampleTransform = mainSample.style.transform;
-
-        this._ui.elements.samplesContainer.insertBefore(mainSample, sample);
-        this._ui.elements.sampleContainer.appendChild(sample);
-
-        mainSample.className = sample.className;
-        mainSample.style.transform = sample.style.transform;
-        sample.className = mainSampleClassName;
-        sample.style.transform = mainSampleTransform;
-
-        this.updateSampleData([
-          parseInt(sample.dataset.r, 10),
-          parseInt(sample.dataset.g, 10),
-          parseInt(sample.dataset.b, 10),
-        ]);
-
-        if (!sample.classList.contains('sample--fullscreen')) {
-          this.pushAnimation(
-            sample,
-            mainSample,
-            `transform ${this._ui.vars.duration}s ease-in-out 0s`
-          );
-
-          this.pushAnimation(
-            mainSample,
-            sample,
-            `transform ${this._ui.vars.duration}s ease-in-out 0s`
-          );
-
-          this.runAnimation();
-        }
-      } else if (sample.parentNode === this._ui.elements.sampleContainer) {
-        if (sample.classList.contains('sample--fullscreen')) {
-          sample.classList.remove('sample--fullscreen');
-          sample.style.transform = '';
-        } else {
-          sample.classList.add('sample--fullscreen');
-          sample.style.transform = `scale(${Math.ceil(this._ui.vars.maxDimension / 50) * 2})`;
-        }
-      }
+      this._sampleClickListener(sample);
     });
 
     const currentSamples = [];
@@ -353,12 +398,14 @@ class Palette {
     });
 
     this.runAnimation();
+
+    this.sendToServer(pixel);
   }
 
   createSample(pixel) {
     const sample = document.createElement('div');
-    this._ui.vars.count++;
-    sample.id = `sample-${this._ui.vars.count}`;
+    this._ui.vars.sampleCount++;
+    sample.id = `sample-${this._ui.vars.sampleCount}`;
     sample.className = 'sample';
     sample.style.backgroundColor = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
     sample.dataset.r = pixel[0];
@@ -366,14 +413,6 @@ class Palette {
     sample.dataset.b = pixel[2];
 
     return sample;
-  }
-
-  static rgbInfo(pixel) {
-    return `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
-  }
-
-  static hexInfo(pixel) {
-    return this.rgbToHex(pixel[0], pixel[1], pixel[2]);
   }
 
   updateSampleData(pixel) {
@@ -456,6 +495,23 @@ class Palette {
     });
   }
 
+  sendToServer(pixel) {
+    fetch('/api/add', {
+      method: 'post',
+      body: JSON.stringify({
+        c: pixel.slice(0, 3).join(','),
+      }),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    }).then(response => {
+      return response.json();
+    }).then(json => {
+      console.log(json);
+    });
+  }
+
   static parseColourText(text) {
     let test = text.trim();
 
@@ -500,6 +556,14 @@ class Palette {
       type,
       value: valid,
     };
+  }
+
+  static rgbInfo(pixel) {
+    return `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+  }
+
+  static hexInfo(pixel) {
+    return this.rgbToHex(pixel[0], pixel[1], pixel[2]);
   }
 
   static partToHex(part) {

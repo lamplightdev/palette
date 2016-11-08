@@ -49,7 +49,6 @@ const template = (args) => {
     <title>Palette</title>
 
     <link rel='stylesheet' href='css/app.css'>
-    <script src='js/adapter-latest.js'></script>
   </head>
 
   <body>
@@ -120,7 +119,16 @@ const template = (args) => {
     </footer>
 
     <script src='js/palette.js'></script>
-    <script src='js/app.js'></script>
+    <script src="https://polyfill.io/v2/polyfill.min.js?callback=polyfillsAreLoaded" defer async></script>
+    <script>
+      function polyfillsAreLoaded() {
+        const paletteApp = new Palette();
+
+        paletteApp.init().then(() => {
+          console.log('done', paletteApp.getAvailableActions());
+        });
+      }
+    </script>
   </body>
 
 </html>
