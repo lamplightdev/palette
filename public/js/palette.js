@@ -6,7 +6,9 @@ class Palette {
       input: false,
     };
 
-    this._availableCameras = [];
+    this._availableVideoSources = [];
+    this._currentVideoSourceIndex = 0;
+    this._videoButtonListener = false;
 
     this._currentAction = false;
 
@@ -44,10 +46,10 @@ class Palette {
 
     promises.push(this.initVideoAction()
       .then(result => {
-        console.log(this._availableCameras);
         this._availableActions.video = result;
       })
       .catch(err => {
+        console.log('Error accessing video', err);
         this._availableActions.video = false;
       }));
 
@@ -67,59 +69,9 @@ class Palette {
         numDisabled++;
       } else {
         this._ui.elements.videoContainer.classList.add('show');
+
+        this.initVideo();
         this._ui.elements.video.src = window.URL.createObjectURL(this._availableActions.video);
-
-        this._ui.elements.video.onloadedmetadata = () => {
-          this._ui.elements.video.play();
-
-          const previewSize = this._ui.elements.video.offsetWidth;
-
-          let biggestSide;
-          let smallestSide;
-          let aspectRatio;
-
-          if (this._ui.elements.video.videoHeight > this._ui.elements.video.videoWidth) {
-            biggestSide = 'height';
-            smallestSide = 'width';
-            aspectRatio = this._ui.elements.video.videoHeight / this._ui.elements.video.videoWidth;
-          } else {
-            biggestSide = 'width';
-            smallestSide = 'height';
-            aspectRatio = this._ui.elements.video.videoWidth / this._ui.elements.video.videoHeight;
-          }
-
-          const offset =
-            Math.abs(this._ui.elements.video.videoHeight - this._ui.elements.video.videoWidth) / 2;
-
-          this._ui.elements.video.style[biggestSide] =
-            this._ui.elements.canvas.style[biggestSide] = `${previewSize * aspectRatio}px`;
-
-          this._ui.elements.canvas[biggestSide] = previewSize * aspectRatio;
-          this._ui.elements.canvas[smallestSide] = previewSize;
-
-          this._ui.elements.videoButton.addEventListener('click', () => {
-            this._ui.elements.videoButton.classList.add('hide');
-            this._ui.elements.canvasContext.drawImage(this._ui.elements.video,
-              biggestSide === 'height' ? 0 : offset,
-              biggestSide === 'width' ? 0 : offset,
-              biggestSide === 'height' ?
-                this._ui.elements.video.videoWidth :
-                this._ui.elements.video.videoHeight,
-              biggestSide === 'height' ?
-                this._ui.elements.video.videoWidth :
-                this._ui.elements.video.videoHeight,
-              0,
-              0,
-              previewSize,
-              previewSize
-            );
-            const pixel = this._ui.elements.canvasContext
-              .getImageData(previewSize / 2, previewSize / 2, 1, 1)
-              .data;
-
-            this.pushSample(pixel, this._ui.elements.videoContainer);
-          });
-        };
       }
 
       if (!this._availableActions.upload) {
@@ -147,11 +99,13 @@ class Palette {
       }
 
       let promise;
+      this._availableVideoSources = [];
+
       if (navigator.mediaDevices.enumerateDevices) {
         promise = navigator.mediaDevices.enumerateDevices().then(devices => {
           devices.forEach(device => {
             if (device.kind === 'videoinput') {
-              this._availableCameras.push(device);
+              this._availableVideoSources.push(device.deviceId);
             }
           });
         }).catch(err => {
@@ -162,7 +116,7 @@ class Palette {
           window.MediaStreamTrack.getSources(sources => {
             sources.forEach(source => {
               if (source.kind === 'video') {
-                this._availableCameras.push(source);
+                this._availableVideoSources.push(source.id);
               }
             });
 
@@ -173,12 +127,16 @@ class Palette {
         promise = Promise.resolve();
       }
 
-      return promise.then(() => navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          facingMode: 'environment',
-        },
-      }));
+      return promise.then(() => {
+        return navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            optional: [{
+              sourceId: this._availableVideoSources[this._currentVideoSourceIndex],
+            }],
+          },
+        });
+      });
     });
   }
 
@@ -188,6 +146,70 @@ class Palette {
 
   initInputAction() {
     return Promise.resolve().then(() => true);
+  }
+
+  initVideo() {
+    this._ui.elements.video.onloadedmetadata = () => {
+      this._ui.elements.video.play();
+
+      const previewSize = this._ui.elements.video.offsetWidth;
+
+      let biggestSide;
+      let smallestSide;
+      let aspectRatio;
+
+      if (this._ui.elements.video.videoHeight > this._ui.elements.video.videoWidth) {
+        biggestSide = 'height';
+        smallestSide = 'width';
+        aspectRatio = this._ui.elements.video.videoHeight / this._ui.elements.video.videoWidth;
+      } else {
+        biggestSide = 'width';
+        smallestSide = 'height';
+        aspectRatio = this._ui.elements.video.videoWidth / this._ui.elements.video.videoHeight;
+      }
+
+      const offset =
+        Math.abs(this._ui.elements.video.videoHeight - this._ui.elements.video.videoWidth) / 2;
+
+      this._ui.elements.video.style[biggestSide] =
+        this._ui.elements.canvas.style[biggestSide] = `${previewSize * aspectRatio}px`;
+
+      this._ui.elements.canvas[biggestSide] = previewSize * aspectRatio;
+      this._ui.elements.canvas[smallestSide] = previewSize;
+
+      if (this._videoButtonListener) {
+        this._ui.elements.videoButton.removeEventListener('click', this._videoButtonListener);
+      }
+
+      this._videoButtonListener = () => {
+        this._sampleVideo(biggestSide, offset, previewSize);
+      };
+
+      this._ui.elements.videoButton.addEventListener('click', this._videoButtonListener);
+    };
+  }
+
+  _sampleVideo(biggestSide, offset, previewSize) {
+    this._ui.elements.videoButton.classList.add('hide');
+    this._ui.elements.canvasContext.drawImage(this._ui.elements.video,
+      biggestSide === 'height' ? 0 : offset,
+      biggestSide === 'width' ? 0 : offset,
+      biggestSide === 'height' ?
+        this._ui.elements.video.videoWidth :
+        this._ui.elements.video.videoHeight,
+      biggestSide === 'height' ?
+        this._ui.elements.video.videoWidth :
+        this._ui.elements.video.videoHeight,
+      0,
+      0,
+      previewSize,
+      previewSize
+    );
+    const pixel = this._ui.elements.canvasContext
+      .getImageData(previewSize / 2, previewSize / 2, 1, 1)
+      .data;
+
+    this.pushSample(pixel, this._ui.elements.videoContainer);
   }
 
   initUI() {
@@ -201,6 +223,7 @@ class Palette {
     this._ui.elements.uploadContainer = document.querySelector('.upload-container');
     this._ui.elements.inputContainer = document.querySelector('.input-container');
     this._ui.elements.videoButton = this._ui.elements.videoContainer.querySelector('button');
+    this._ui.elements.videoSourceButton = document.querySelector('.btn--videosource');
     this._ui.elements.canvas = document.querySelector('canvas');
     this._ui.elements.canvasContext = this._ui.elements.canvas.getContext('2d');
     this._ui.elements.sampleContainer = document.querySelector('.sample-container');
@@ -293,6 +316,29 @@ class Palette {
         this._sampleClickListener(sample);
       });
     }
+
+    this._ui.elements.videoSourceButton.addEventListener('click', () => {
+      if (this._availableVideoSources.length > 1) {
+        this._currentVideoSourceIndex =
+          (this._currentVideoSourceIndex + 1) % this._availableVideoSources.length;
+
+        const track = this._availableActions.video.getVideoTracks()[0];
+        if (track) {
+          track.stop();
+        }
+        navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            optional: [{
+              sourceId: this._availableVideoSources[this._currentVideoSourceIndex],
+            }],
+          },
+        }).then(result => {
+          this._availableActions.video = result;
+          this._ui.elements.video.src = window.URL.createObjectURL(this._availableActions.video);
+        });
+      }
+    });
   }
 
   _sampleClickListener(sample) {
