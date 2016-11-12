@@ -135,6 +135,7 @@ footer {
   }
 
   .colour-bar > div:nth-child(4) {
+    width: 100%; // for browsers that don't support css calc
     width: calc(100% / 1.6 / 1.6);
   }
 
