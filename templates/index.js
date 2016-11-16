@@ -2,13 +2,19 @@ const Palette = require('../public/js/palette');
 
 const template = (args) => {
   const num = 6;
+  const coloursSlice = args.colours.slice(0, num);
 
-  const colours = args.colours.slice(0, num).map((colour, index) => `
+  const colours = coloursSlice.map((colour, index) => `
     <div
       id='sample-${num - index}'
-      class='sample'
-      data-r='${colour[0]}' data-g='${colour[1]}' data-b='${colour[2]}'
-      style='background-color: rgb(${colour[0]}, ${colour[1]}, ${colour[2]});'>
+      class='sample ${num - index === 1 ? 'sample--last' : ''}'
+      data-r='${colour[0]}'
+      data-g='${colour[1]}'
+      data-b='${colour[2]}'
+      style='
+        background-color: rgb(${colour[0]}, ${colour[1]}, ${colour[2]});
+        ${coloursSlice[index + 1] ? `color: rgb(${coloursSlice[index + 1][0]}, ${coloursSlice[index + 1][1]}, ${coloursSlice[index + 1][2]});` : ''}
+      '>
     </div>`.trim()
   );
 
@@ -16,7 +22,10 @@ const template = (args) => {
     colours.push(`
       <div
         id='sample-${i}'
-        class='sample'
+        class='sample ${i === 1 ? 'sample--last' : ''}'
+        data-r='238'
+        data-g='238'
+        data-b='238'
       >
       </div>
     `.trim());
@@ -74,7 +83,7 @@ const template = (args) => {
           <div class='action-container'>
             <div class='container video-container' id='video-container'>
                 <video></video>
-                <button><img src='images/touch_app.svg' alt='Take photo'></button>
+                <button class='take-photo'><img src='images/touch_app.svg' alt='Take photo'></button>
             </div>
             <div class='container upload-container'>
               <input

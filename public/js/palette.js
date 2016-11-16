@@ -302,6 +302,13 @@ class Palette {
         }
       );
 
+      if (this._ui.elements.actionContainer.children[1]
+          && this._ui.elements.actionContainer.children[1].id === 'video-container') {
+        this._ui.elements.videoSourceButton.classList.remove('hide');
+      } else {
+        this._ui.elements.videoSourceButton.classList.add('hide');
+      }
+
       this.runAnimation();
     });
 

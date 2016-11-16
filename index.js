@@ -10,8 +10,8 @@ app.use(bodyParser.json());
 app.use(express.static('public'));
 
 const colours = [
-  [220, 16, 21],
-  [22, 167, 211],
+  // [220, 16, 21],
+  // [22, 167, 211],
 ];
 
 const addColour = (text) => {
