@@ -55,6 +55,8 @@ const template = (args) => {
       content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes"
     >
 
+    <link rel="icon" type="image/png" href="images/logo.png" />
+
     <title>Palette</title>
 
     <link rel='stylesheet' href='css/app.css'>
