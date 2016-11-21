@@ -128,6 +128,10 @@ class Palette {
       }
 
       return promise.then(() => {
+        if (this._availableVideoSources.length > 1) {
+          this._ui.elements.videoSourceButton.classList.remove('hide');
+        }
+
         return navigator.mediaDevices.getUserMedia({
           audio: false,
           video: {
@@ -303,7 +307,8 @@ class Palette {
       );
 
       if (this._ui.elements.actionContainer.children[1]
-          && this._ui.elements.actionContainer.children[1].id === 'video-container') {
+          && this._ui.elements.actionContainer.children[1].id === 'video-container'
+          && this._availableVideoSources.length > 1) {
         this._ui.elements.videoSourceButton.classList.remove('hide');
       } else {
         this._ui.elements.videoSourceButton.classList.add('hide');
@@ -612,7 +617,7 @@ class Palette {
   }
 
   static rgbInfo(pixel) {
-    return `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+    return `${pixel[0]}, ${pixel[1]}, ${pixel[2]}`;
   }
 
   static hexInfo(pixel) {

@@ -339,10 +339,6 @@ video, .action, .video-container, .upload-container, .input-container, canvas {
   text-align: right;
 }
 
-  .colour-data > div {
-    padding: 0.2rem 0;
-  }
-
 .file-upload {
   width: 0.1px;
   height: 0.1px;

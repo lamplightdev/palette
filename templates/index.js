@@ -76,7 +76,7 @@ const template = (args) => {
 
     <main>
       <div class='main'>
-        <button class='btn btn--videosource'>
+        <button class='btn btn--videosource hide'>
           <img src='images/camera_rear.svg' alt='Switch video source'>
         </button>
         <div class='action'>
