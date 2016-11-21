@@ -17,7 +17,7 @@ body {
   font-size: 12px;
   color: #444;
   font-weight: 400;
-  overflow: hidden;
+  // overflow: hidden;
   margin: 0;
 }
 
@@ -168,7 +168,7 @@ video, .action, .video-container, .upload-container, .input-container, canvas {
 
 .action {
   position: relative;
-  overflow: hidden;
+  overflow: scroll-x;
   // border-radius: 150px;
   z-index: 0;
 }
