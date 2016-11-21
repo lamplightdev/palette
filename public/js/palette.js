@@ -617,7 +617,7 @@ class Palette {
   }
 
   static rgbInfo(pixel) {
-    return `${pixel[0]}, ${pixel[1]}, ${pixel[2]}`;
+    return `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
   }
 
   static hexInfo(pixel) {
