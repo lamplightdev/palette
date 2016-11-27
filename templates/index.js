@@ -85,7 +85,9 @@ const template = (args) => {
           <div class='action-container'>
             <div class='container video-container' id='video-container'>
                 <video></video>
-                <button class='take-photo'><img src='images/touch_app.svg' alt='Take photo'></button>
+                <button class='take-photo'>
+                  <div></div>
+                </button>
             </div>
             <div class='container upload-container'>
               <input

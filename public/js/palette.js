@@ -27,6 +27,138 @@ class Palette {
     this._animationBatch = [];
   }
 
+  initUIElements() {
+    this._ui.elements.video = document.querySelector('video');
+    this._ui.elements.videoContainer = document.querySelector('.video-container');
+    this._ui.elements.uploadContainer = document.querySelector('.upload-container');
+    this._ui.elements.inputContainer = document.querySelector('.input-container');
+    this._ui.elements.videoButton = this._ui.elements.videoContainer.querySelector('button');
+    this._ui.elements.videoSourceButton = document.querySelector('.btn--videosource');
+    this._ui.elements.canvas = document.querySelector('canvas');
+    this._ui.elements.canvasContext = this._ui.elements.canvas.getContext('2d');
+    this._ui.elements.sampleContainer = document.querySelector('.sample-container');
+    this._ui.elements.samplesContainer = document.querySelector('.samples-container');
+    this._ui.elements.sampleRGB = document.querySelector('.sample-rgb');
+    this._ui.elements.sampleHex = document.querySelector('.sample-hex');
+    this._ui.elements.fileUpload = document.querySelector('.file-upload');
+    this._ui.elements.actionContainer = document.querySelector('.action-container');
+    this._ui.elements.btnSource = document.querySelector('.btn--source');
+    this._ui.elements.inputForm = document.querySelector('.input-container');
+    this._ui.elements.colourBarHeading = document.querySelector('.colour-bar > h1');
+    this._ui.elements.colourBarDivs = document.querySelectorAll('.colour-bar > div');
+  }
+
+  initUIEvents() {
+    this._ui.elements.inputForm.addEventListener('submit', event => {
+      event.preventDefault();
+
+      const value = event.target.c.value;
+      const valid = this.constructor.parseColourText(value);
+      if (valid) {
+        event.target.c.classList.remove('warn');
+
+        let pixel;
+
+        if (valid.type === 'rgb') {
+          pixel = valid.value;
+        } else {
+          // hex
+          pixel = this.constructor.hexToRgb(valid.value);
+        }
+
+        this.pushSample(pixel, this._ui.elements.inputContainer);
+      } else {
+        event.target.c.classList.add('warn');
+      }
+    });
+
+    this._ui.elements.fileUpload.addEventListener('change', event => {
+      const data = event.target.files[0];
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        const image = new Image();
+        image.src = reader.result;
+
+        this._ui.elements.canvasContext.drawImage(image, 0, 0);
+
+        const pixel = this._ui.elements.canvasContext
+          .getImageData(
+            this._ui.elements.canvas.width / 2,
+            this._ui.elements.canvas.height / 2,
+            1,
+            1
+          )
+          .data;
+
+        this.pushSample(pixel, this._ui.elements.uploadContainer);
+      });
+      reader.readAsDataURL(data);
+    });
+
+    this._ui.elements.btnSource.addEventListener('click', event => {
+      event.preventDefault();
+
+      this._ui.elements.actionContainer.style.left = `-${this._ui.vars.size}px`;
+      this.pushAnimation(
+        this._ui.elements.actionContainer,
+        `translateX(${this._ui.vars.size}px)`,
+        `transform ${this._ui.vars.duration}s ease-in-out 0s`,
+        () => {
+          this._ui.elements.actionContainer.appendChild(
+            this._ui.elements.actionContainer.children[0]
+          );
+          this._ui.elements.actionContainer.style.left = '';
+          this._ui.elements.video.play();
+        }
+      );
+
+      if (this._ui.elements.actionContainer.children[1]
+          && this._ui.elements.actionContainer.children[1].id === 'video-container'
+          && this._availableVideoSources.length > 1) {
+        this._ui.elements.videoSourceButton.classList.remove('hide');
+      } else {
+        this._ui.elements.videoSourceButton.classList.add('hide');
+      }
+
+      this.runAnimation();
+    });
+
+    // add event listeners for server side rendered elements
+    const existingSamples = document.querySelectorAll('.sample');
+    for (let i = 0; i < existingSamples.length; i++) {
+      const sample = existingSamples[i];
+
+      sample.addEventListener('click', event => {
+        event.preventDefault();
+
+        this._sampleClickListener(sample);
+      });
+    }
+
+    this._ui.elements.videoSourceButton.addEventListener('click', () => {
+      if (this._availableVideoSources.length > 1) {
+        this._currentVideoSourceIndex =
+          (this._currentVideoSourceIndex + 1) % this._availableVideoSources.length;
+
+        const track = this._availableActions.video.getVideoTracks()[0];
+        if (track) {
+          track.stop();
+        }
+        navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            optional: [{
+              sourceId: this._availableVideoSources[this._currentVideoSourceIndex],
+            }],
+          },
+        }).then(result => {
+          this._availableActions.video = result;
+          this._ui.elements.video.src = window.URL.createObjectURL(this._availableActions.video);
+        });
+      }
+    });
+  }
+
   init() {
     const promises = [];
 
@@ -194,7 +326,7 @@ class Palette {
   }
 
   _sampleVideo(biggestSide, offset, previewSize) {
-    this._ui.elements.videoButton.classList.add('hide');
+    // this._ui.elements.videoButton.classList.add('hide');
     this._ui.elements.canvasContext.drawImage(this._ui.elements.video,
       biggestSide === 'height' ? 0 : offset,
       biggestSide === 'width' ? 0 : offset,
@@ -219,138 +351,6 @@ class Palette {
   initUI() {
     this.initUIElements();
     this.initUIEvents();
-  }
-
-  initUIElements() {
-    this._ui.elements.video = document.querySelector('video');
-    this._ui.elements.videoContainer = document.querySelector('.video-container');
-    this._ui.elements.uploadContainer = document.querySelector('.upload-container');
-    this._ui.elements.inputContainer = document.querySelector('.input-container');
-    this._ui.elements.videoButton = this._ui.elements.videoContainer.querySelector('button');
-    this._ui.elements.videoSourceButton = document.querySelector('.btn--videosource');
-    this._ui.elements.canvas = document.querySelector('canvas');
-    this._ui.elements.canvasContext = this._ui.elements.canvas.getContext('2d');
-    this._ui.elements.sampleContainer = document.querySelector('.sample-container');
-    this._ui.elements.samplesContainer = document.querySelector('.samples-container');
-    this._ui.elements.sampleRGB = document.querySelector('.sample-rgb');
-    this._ui.elements.sampleHex = document.querySelector('.sample-hex');
-    this._ui.elements.fileUpload = document.querySelector('.file-upload');
-    this._ui.elements.actionContainer = document.querySelector('.action-container');
-    this._ui.elements.btnSource = document.querySelector('.btn--source');
-    this._ui.elements.inputForm = document.querySelector('.input-container');
-    this._ui.elements.colourBarHeading = document.querySelector('.colour-bar > h1');
-    this._ui.elements.colourBarDivs = document.querySelectorAll('.colour-bar > div');
-  }
-
-  initUIEvents() {
-    this._ui.elements.inputForm.addEventListener('submit', event => {
-      event.preventDefault();
-
-      const value = event.target.c.value;
-      const valid = this.constructor.parseColourText(value);
-      if (valid) {
-        event.target.c.classList.remove('warn');
-
-        let pixel;
-
-        if (valid.type === 'rgb') {
-          pixel = valid.value;
-        } else {
-          // hex
-          pixel = this.constructor.hexToRgb(valid.value);
-        }
-
-        this.pushSample(pixel, this._ui.elements.inputContainer);
-      } else {
-        event.target.c.classList.add('warn');
-      }
-    });
-
-    this._ui.elements.fileUpload.addEventListener('change', event => {
-      const data = event.target.files[0];
-      const reader = new FileReader();
-      reader.addEventListener('load', () => {
-        const image = new Image();
-        image.src = reader.result;
-
-        this._ui.elements.canvasContext.drawImage(image, 0, 0);
-
-        const pixel = this._ui.elements.canvasContext
-          .getImageData(
-            this._ui.elements.canvas.width / 2,
-            this._ui.elements.canvas.height / 2,
-            1,
-            1
-          )
-          .data;
-
-        this.pushSample(pixel, this._ui.elements.uploadContainer);
-      });
-      reader.readAsDataURL(data);
-    });
-
-    this._ui.elements.btnSource.addEventListener('click', event => {
-      event.preventDefault();
-
-      this._ui.elements.actionContainer.style.left = `-${this._ui.vars.size}px`;
-      this.pushAnimation(
-        this._ui.elements.actionContainer,
-        `translateX(${this._ui.vars.size}px)`,
-        `transform ${this._ui.vars.duration}s ease-in-out 0s`,
-        () => {
-          this._ui.elements.actionContainer.appendChild(
-            this._ui.elements.actionContainer.children[0]
-          );
-          this._ui.elements.actionContainer.style.left = '';
-          this._ui.elements.video.play();
-        }
-      );
-
-      if (this._ui.elements.actionContainer.children[1]
-          && this._ui.elements.actionContainer.children[1].id === 'video-container'
-          && this._availableVideoSources.length > 1) {
-        this._ui.elements.videoSourceButton.classList.remove('hide');
-      } else {
-        this._ui.elements.videoSourceButton.classList.add('hide');
-      }
-
-      this.runAnimation();
-    });
-
-    // add event listeners for server side rendered elements
-    const existingSamples = document.querySelectorAll('.sample');
-    for (let i = 0; i < existingSamples.length; i++) {
-      const sample = existingSamples[i];
-
-      sample.addEventListener('click', event => {
-        event.preventDefault();
-
-        this._sampleClickListener(sample);
-      });
-    }
-
-    this._ui.elements.videoSourceButton.addEventListener('click', () => {
-      if (this._availableVideoSources.length > 1) {
-        this._currentVideoSourceIndex =
-          (this._currentVideoSourceIndex + 1) % this._availableVideoSources.length;
-
-        const track = this._availableActions.video.getVideoTracks()[0];
-        if (track) {
-          track.stop();
-        }
-        navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: {
-            optional: [{
-              sourceId: this._availableVideoSources[this._currentVideoSourceIndex],
-            }],
-          },
-        }).then(result => {
-          this._availableActions.video = result;
-          this._ui.elements.video.src = window.URL.createObjectURL(this._availableActions.video);
-        });
-      }
-    });
   }
 
   _sampleClickListener(sample) {
@@ -429,7 +429,11 @@ class Palette {
     this.pushAnimation(
       sample,
       fromElement,
-      `transform ${this._ui.vars.duration}s ease-in-out 0.2s`
+      `opacity ${this._ui.vars.duration * 3 / 2}s ease-in-out 0s,
+      transform ${this._ui.vars.duration}s ease-in-out ${this._ui.vars.duration / 2}s`,
+      false,
+      0,
+      1
     );
 
     if (currentSample) {
@@ -484,12 +488,14 @@ class Palette {
     this._ui.elements.sampleHex.textContent = this.constructor.hexInfo(pixel);
   }
 
-  pushAnimation(element, from, transition, onTransitionEnd = null) {
+  pushAnimation(element, from, transition, onTransitionEnd = false, opacityFrom = false, opacityTo = 1) {
     this._animationBatch.push({
       element,
       from,
       transition,
       onTransitionEnd,
+      opacityFrom,
+      opacityTo,
     });
   }
 
@@ -526,6 +532,10 @@ class Palette {
           // is transform string
           animation.element.style.transform = animation.from;
         }
+
+        if (animation.opacityFrom !== false) {
+          animation.element.style.opacity = animation.opacityFrom;
+        }
       });
 
       this._ui.elements.samplesContainer.children[this._ui.vars.maxSamples - 1].classList.add('sample--last');
@@ -534,6 +544,10 @@ class Palette {
         this._animationBatch.forEach(animation => {
           animation.element.style.transition = animation.transition;
           animation.element.style.transform = '';
+
+          if (animation.opacityTo !== false) {
+            animation.element.style.opacity = animation.opacityTo;
+          }
         });
 
         this._animationBatch = [];

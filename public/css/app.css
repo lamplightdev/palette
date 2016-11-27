@@ -166,6 +166,10 @@ video, .action, .video-container, .upload-container, .input-container, canvas {
   height: 200px;
 }
 
+video {
+  // opacity: 0;
+}
+
 .action {
   position: relative;
   overflow: hidden;
@@ -206,7 +210,7 @@ video, .action, .video-container, .upload-container, .input-container, canvas {
 
 .video-container button.take-photo {
   cursor: pointer;
-  background: white;
+  background: transparent;
   border: 0;
   padding: 0;
   margin: 0;
@@ -216,8 +220,12 @@ video, .action, .video-container, .upload-container, .input-container, canvas {
   left: 0;
   width: 200px;
   height: 200px;
-  opacity: 0.5;
-  transition: opacity 0.2s linear 0s;
+  // opacity: 0.5;
+  // transition: opacity 0.2s linear 0s;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .video-container button.hide {
@@ -227,6 +235,13 @@ video, .action, .video-container, .upload-container, .input-container, canvas {
 .video-container button.take-photo img {
   width: 80px;
   height: 80px;
+}
+
+.video-container button.take-photo div {
+  width: 25px;
+  height: 25px;
+  border-radius: 25px;
+  border: 1px solid #888;
 }
 
 .input-container {
