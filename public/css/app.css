@@ -167,8 +167,13 @@ video, .action, .video-container, .upload-container, .input-container, canvas {
 }
 
 video {
-  // opacity: 0;
+  opacity: 1;
+  transition: opacity 0.1s ease-in-out;
 }
+
+  .video--blur {
+    opacity: 0.3;
+  }
 
 .action {
   position: relative;
@@ -241,7 +246,7 @@ video {
   width: 25px;
   height: 25px;
   border-radius: 25px;
-  border: 1px solid #888;
+  border: 1px solid #333;
 }
 
 .input-container {
@@ -261,7 +266,7 @@ video {
     margin-bottom: 1rem;
   }
 
-.sample{
+.sample {
   position: relative;
   display: inline-block;
   flex-shrink: 0;

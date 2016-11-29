@@ -345,7 +345,7 @@ class Palette {
       .getImageData(previewSize / 2, previewSize / 2, 1, 1)
       .data;
 
-    this.pushSample(pixel, this._ui.elements.videoContainer);
+    this.pushSample(pixel, this._ui.elements.videoContainer.querySelector('div'));
   }
 
   initUI() {
@@ -426,14 +426,15 @@ class Palette {
 
     this.updateSampleData(pixel);
 
+    this._ui.elements.video.classList.add('video--blur');
     this.pushAnimation(
       sample,
       fromElement,
-      `opacity ${this._ui.vars.duration * 3 / 2}s ease-in-out 0s,
-      transform ${this._ui.vars.duration}s ease-in-out ${this._ui.vars.duration / 2}s`,
-      false,
-      0,
-      1
+      `opacity ${this._ui.vars.duration}s ease-in-out 0s,
+      transform ${this._ui.vars.duration}s ease-in-out 0s`,
+      () => {
+        this._ui.elements.video.classList.remove('video--blur');
+      }
     );
 
     if (currentSample) {
@@ -488,14 +489,12 @@ class Palette {
     this._ui.elements.sampleHex.textContent = this.constructor.hexInfo(pixel);
   }
 
-  pushAnimation(element, from, transition, onTransitionEnd = false, opacityFrom = false, opacityTo = 1) {
+  pushAnimation(element, from, transition, onTransitionEnd = false) {
     this._animationBatch.push({
       element,
       from,
       transition,
-      onTransitionEnd,
-      opacityFrom,
-      opacityTo,
+      onTransitionEnd
     });
   }
 
@@ -532,10 +531,6 @@ class Palette {
           // is transform string
           animation.element.style.transform = animation.from;
         }
-
-        if (animation.opacityFrom !== false) {
-          animation.element.style.opacity = animation.opacityFrom;
-        }
       });
 
       this._ui.elements.samplesContainer.children[this._ui.vars.maxSamples - 1].classList.add('sample--last');
@@ -544,10 +539,6 @@ class Palette {
         this._animationBatch.forEach(animation => {
           animation.element.style.transition = animation.transition;
           animation.element.style.transform = '';
-
-          if (animation.opacityTo !== false) {
-            animation.element.style.opacity = animation.opacityTo;
-          }
         });
 
         this._animationBatch = [];
