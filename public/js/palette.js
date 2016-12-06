@@ -19,6 +19,8 @@ class Palette {
         sampleCount: 6, // there'll always be 6 on initialisation (event if they are empty)
         duration: 0.4,
         maxDimension: Math.max(window.innerWidth, window.innerHeight),
+        colourPoints: 50,
+        colourCircleRadius: 15,
       },
       elements: {},
       events: {},
@@ -28,6 +30,7 @@ class Palette {
   }
 
   initUIElements() {
+    this._ui.elements.body = document.querySelector('body');
     this._ui.elements.video = document.querySelector('video');
     this._ui.elements.videoContainer = document.querySelector('.video-container');
     this._ui.elements.uploadContainer = document.querySelector('.upload-container');
@@ -341,9 +344,43 @@ class Palette {
       previewSize,
       previewSize
     );
-    const pixel = this._ui.elements.canvasContext
-      .getImageData(previewSize / 2, previewSize / 2, 1, 1)
-      .data;
+
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+
+    const points = [];
+
+    for (let i = 0; i < this._ui.vars.colourPoints; i++) {
+      const theta = i * goldenAngle;
+      const r = Math.sqrt(i) / Math.sqrt(this._ui.vars.colourPoints);
+
+      points.push({
+        x: r * Math.cos(theta),
+        y: r * Math.sin(theta),
+      });
+    }
+
+    const pixels = points.map(point => {
+      return {
+        x: parseInt(previewSize / 2 + point.x * this._ui.vars.colourCircleRadius, 10),
+        y: parseInt(previewSize / 2 + point.y * this._ui.vars.colourCircleRadius, 10),
+      };
+    });
+
+    const pixel = pixels.reduce((previous, current) => {
+      const pixelData = this._ui.elements.canvasContext
+        .getImageData(current.x, current.y, 1, 1)
+        .data;
+
+      return [
+        previous[0] + pixelData[0],
+        previous[1] + pixelData[1],
+        previous[2] + pixelData[2],
+      ];
+    }, [0, 0, 0]);
+
+    pixel[0] = parseInt(pixel[0] / this._ui.vars.colourPoints, 10);
+    pixel[1] = parseInt(pixel[1] / this._ui.vars.colourPoints, 10);
+    pixel[2] = parseInt(pixel[2] / this._ui.vars.colourPoints, 10);
 
     this.pushSample(pixel, this._ui.elements.videoContainer.querySelector('div'));
   }
@@ -391,9 +428,11 @@ class Palette {
     } else if (sample.parentNode === this._ui.elements.sampleContainer) {
       if (sample.classList.contains('sample--fullscreen')) {
         sample.classList.remove('sample--fullscreen');
+        this._ui.elements.body.classList.remove('body-fullscreen');
         sample.style.transform = '';
       } else {
         sample.classList.add('sample--fullscreen');
+        this._ui.elements.body.classList.add('body-fullscreen');
         sample.style.transform = `scale(${Math.ceil(this._ui.vars.maxDimension / 50) * 2})`;
       }
     }
