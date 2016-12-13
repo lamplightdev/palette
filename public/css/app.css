@@ -163,7 +163,7 @@ footer {
   margin: 2rem 0;
 }
 
-video, .action, .video-container, .upload-container, .input-container, canvas {
+video, .actions, .video-container, .upload-container, .input-container, canvas {
   position: relative;
   width: 200px;
   height: 200px;
@@ -178,10 +178,9 @@ video {
     opacity: 0.3;
   }
 
-.action {
+.actions {
   position: relative;
   overflow: hidden;
-  // border-radius: 150px;
   z-index: 0;
 }
 
@@ -296,7 +295,6 @@ video {
   }
 
   .colour--animate-fullscreen {
-    //transition: transform 0.3s ease-in-out 0s;
   }
 
 .sample-container, .samples-container {

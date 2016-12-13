@@ -76,12 +76,17 @@ const template = (args) => {
       <div style='background-color: ${headerColour};'></div>
     </header>
 
+    <palette-actions>
+      <palette-camera-capture></palette-camera-capture>
+    </palette-actions>
+
     <main>
       <div class='main'>
         <button class='btn btn--videosource hide'>
           <img src='images/camera_rear.svg' alt='Switch video source'>
         </button>
-        <div class='action'>
+
+        <div class='actions'>
           <div class='action-container'>
             <div class='container video-container' id='video-container'>
                 <video></video>
