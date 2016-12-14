@@ -77,7 +77,10 @@ const template = (args) => {
     </header>
 
     <palette-actions>
-      <palette-camera-capture></palette-camera-capture>
+      <!--palette-camera-capture></palette-camera-capture-->
+      <palette-image-upload></palette-image-upload>
+      <palette-image-upload></palette-image-upload>
+      <palette-image-upload></palette-image-upload>
     </palette-actions>
 
     <main>
@@ -138,6 +141,9 @@ const template = (args) => {
       <a href='https://twitter.com/lamplightdev'>@lamplightdev</a> | <a href='https://github.com/lamplightdev/palette'>github</a>
     </footer>
 
+    <script src='js/elements/actions.js'></script>
+    <script src='js/elements/camera-capture.js'></script>
+    <script src='js/elements/image-upload.js'></script>
     <script src='js/palette.js'></script>
     <script src="https://polyfill.io/v2/polyfill.min.js?callback=polyfillsAreLoaded" defer async></script>
     <script>
