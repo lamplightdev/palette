@@ -4,6 +4,8 @@ class PaletteImageUpload extends HTMLElement {
 
     const shadowRoot = this.attachShadow({ mode: 'open' });
 
+    const name = this.getAttribute('name');
+
     shadowRoot.innerHTML = `
       <style>
         :host {
@@ -11,7 +13,7 @@ class PaletteImageUpload extends HTMLElement {
         }
       </style>
 
-      <h1>Hi</h1>
+      <h1>Hi ${name}</h1>
     `;
 
     this.style.width = `${this.offsetHeight}px`;

@@ -11,13 +11,20 @@ class PaletteCameraCapture extends HTMLElement {
     shadowRoot.innerHTML = `
       <style>
         :host {
-          font-family: serif;
+          position: relative;
           display: flex;
           flex-direction: column;
         }
 
         video {
           height: 100%;
+        }
+
+        button {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
         }
       </style>
 
@@ -31,6 +38,43 @@ class PaletteCameraCapture extends HTMLElement {
 
     video.setAttribute('width', this.offsetHeight);
     video.setAttribute('height', this.offsetHeight);
+
+    this._snap = this._snap.bind(this);
+  }
+
+  connectedCallback() {
+    this._initVideoAction()
+      .then(result => {
+        this._available = true;
+
+        const video = this.shadowRoot.querySelector('video');
+
+        video.onloadedmetadata = () => {
+          video.play();
+        };
+
+        video.src = window.URL.createObjectURL(result);
+      })
+      .catch(err => {
+        console.log('Error accessing video', err);
+        this._available = false;
+      });
+
+    const button = this.shadowRoot.querySelector('button');
+    button.addEventListener('click', this._snap);
+
+    this._fireSnapEvent = (data) => {
+      this.dispatchEvent(new CustomEvent('snap', {
+        detail: {
+          data,
+        },
+      }));
+    };
+  }
+
+  disconnectedCallback() {
+    const button = this.shadowRoot.querySelector('button');
+    button.removeEventListener(this._snap);
   }
 
   _initVideoAction() {
@@ -85,23 +129,10 @@ class PaletteCameraCapture extends HTMLElement {
     });
   }
 
-  connectedCallback() {
-    this._initVideoAction()
-      .then(result => {
-        this._available = true;
-
-        const video = this.shadowRoot.querySelector('video');
-
-        video.onloadedmetadata = () => {
-          video.play();
-        };
-
-        video.src = window.URL.createObjectURL(result);
-      })
-      .catch(err => {
-        console.log('Error accessing video', err);
-        this._available = false;
-      });
+  _snap(event) {
+    this._fireSnapEvent({
+      video: this.shadowRoot.querySelector('video'),
+    });
   }
 }
 

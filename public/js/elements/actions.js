@@ -1,8 +1,44 @@
 class PaletteActions extends HTMLElement {
+  static get observedAttributes() {
+    return ['index'];
+  }
+
+  get index() {
+    return this.getAttribute('index') || 0;
+  }
+
+  set index(index) {
+    this.setAttribute('index', index);
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    switch (name) {
+      case 'index':
+        this._indexChanged(oldValue, newValue);
+        break;
+      default:
+        break;
+    }
+  }
+
+  _indexChanged(oldValue, newValue) {
+    this._nextAction(parseInt(oldValue, 10) || 0, parseInt(newValue, 10));
+  }
+
   constructor() {
     super();
 
-    console.log('palette-actions contstructor');
+    this._elements = {
+      container: null,
+      button: null,
+      slot: null,
+      actions: [],
+    };
+
+    this._actionInfo = {
+      number: 0,
+      order: [],
+    };
 
     this._size = {
       width: 0,
@@ -14,6 +50,7 @@ class PaletteActions extends HTMLElement {
       <style>
         :host {
           display: flex;
+          flex-direction: column;
           overflow: hidden;
           position: relative;
         }
@@ -25,40 +62,114 @@ class PaletteActions extends HTMLElement {
           left: 0;
           bottom: 0;
 
-          transition: left 1s linear 0s;
+          transition: transform 1s ease-in-out 0s;
+        }
+
+        .container.no-animation {
+          transition: none;
+        }
+
+        button {
+          position: relative;
         }
 
         #actions::slotted(*) {
         }
       </style>
 
-      <div class='container'>
+      <div class='container no-animation'>
         <slot id='actions'></slot>
       </div>
     `;
 
-    this.addEventListener('click', () => {
-      if (!this.shadowRoot.querySelector('.container').style.left) {
-        this.shadowRoot.querySelector('.container').style.left = 0;
-      }
-      this.shadowRoot.querySelector('.container').style.left = `${parseInt(this.shadowRoot.querySelector('.container').style.left, 10) - 250}px`;
-    });
+    this._elements.slot = this.shadowRoot.querySelector('slot#actions');
+    this._elements.container = this.shadowRoot.querySelector('.container');
+
+    this._transitionEnd = this._transitionEnd.bind(this);
   }
 
   connectedCallback() {
-    console.log('palette-actions connected');
+    this._elements.actions = this._elements.slot
+      .assignedNodes()
+      .filter(node => node.nodeType !== Node.TEXT_NODE);
+
+    this._actionInfo.order = [];
+    this._elements.actions.forEach((action, index) => {
+      action.dataset.index = index;
+      this._actionInfo.order.push(index);
+    });
+
+    this._actionInfo.number = this._actionInfo.order.length;
 
     this._size.width = this.offsetWidth;
     this._size.height = this.offsetHeight;
 
-    const maxDimension = Math.max(this._size.width, this._size.height);
-
-    const slot = this.shadowRoot.querySelector('slot#actions');
-    console.log(slot.assignedNodes());
+    this._elements.container.addEventListener('transitionend', this._transitionEnd);
   }
 
   disconnectedCallback() {
-    console.log('palette-actions disconnected');
+    this.removeEventListener('click', this._nextAction);
+    this.removeEventListener('transitionend', this._transitionEnd);
+  }
+
+  _nextAction(prevIndex, nextIndex) {
+    console.log(prevIndex, nextIndex);
+
+    let left = 0;
+    this._diff = nextIndex - prevIndex;
+    if (this._diff === 5) {
+      this._diff = -1;
+    } else if (this._diff === -5) {
+      this._diff = 1;
+    }
+
+    if (Math.abs(this._diff) < this._actionInfo.number) {
+      left = this._size.width * this._diff;
+    } else {
+      left = this._size.width * (this._diff + this._actionInfo.number - 1);
+    }
+
+    if (this._diff < 0) {
+      const parent = this._elements.actions[this._actionInfo.number - 1].parentNode;
+
+      for (let i = 0; i > this._diff; i--) {
+        parent.insertBefore(this._elements.actions[this._actionInfo.number - 1], this._elements.actions[0]);
+
+        this._elements.actions.unshift(this._elements.actions.pop());
+        this._actionInfo.order.unshift(this._actionInfo.order.pop());
+      }
+
+      requestAnimationFrame(() => {
+        this._elements.container.style.transform = `translateX(${1 * left}px)`;
+        requestAnimationFrame(() => {
+          this._elements.container.classList.remove('no-animation');
+          this._elements.container.style.transform = '';
+        });
+      });
+    } else {
+      this._elements.container.classList.remove('no-animation');
+      requestAnimationFrame(() => {
+        this._elements.container.style.transform = `translateX(${-1 * left}px)`;
+      });
+    }
+  }
+
+  _transitionEnd() {
+    this._elements.container.classList.add('no-animation');
+    this._elements.container.style.transform = '';
+
+    if (this._diff > 0) {
+      const parent = this._elements.actions[0].parentNode;
+
+      for (let i = 0; i < this._diff; i++) {
+        parent.appendChild(this._elements.actions[0]);
+
+        this._elements.actions.push(this._elements.actions.shift());
+        this._actionInfo.order.push(this._actionInfo.order.shift());
+      }
+    }
+
+    console.log(this._actionInfo.order);
   }
 }
 

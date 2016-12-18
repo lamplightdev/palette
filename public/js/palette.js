@@ -49,6 +49,27 @@ class Palette {
     this._ui.elements.inputForm = document.querySelector('.input-container');
     this._ui.elements.colourBarHeading = document.querySelector('.colour-bar > h1');
     this._ui.elements.colourBarDivs = document.querySelectorAll('.colour-bar > div');
+
+    this._actionsIndex = 0;
+
+    document.querySelector('.actions-button-prev').addEventListener('click', () => {
+      this._actionsIndex = (this._actionsIndex - 1 + document.querySelectorAll('palette-image-upload').length + 1) % (document.querySelectorAll('palette-image-upload').length + 1);
+      document.querySelector('palette-actions').setAttribute('index', this._actionsIndex);
+    });
+
+    document.querySelector('.actions-button-next').addEventListener('click', () => {
+      this._actionsIndex = (this._actionsIndex + 1) % (document.querySelectorAll('palette-image-upload').length + 1);
+      document.querySelector('palette-actions').setAttribute('index', this._actionsIndex);
+    });
+
+    document.querySelector('.actions-button-1').addEventListener('click', () => {
+      this._actionsIndex = 3;
+      document.querySelector('palette-actions').setAttribute('index', 3);
+    });
+
+    document.querySelector('palette-camera-capture').addEventListener('snap', (event) => {
+      console.log('snapped', event, event.detail);
+    });
   }
 
   initUIEvents() {

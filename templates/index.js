@@ -77,11 +77,18 @@ const template = (args) => {
     </header>
 
     <palette-actions>
-      <!--palette-camera-capture></palette-camera-capture-->
-      <palette-image-upload></palette-image-upload>
-      <palette-image-upload></palette-image-upload>
-      <palette-image-upload></palette-image-upload>
+      <palette-camera-capture></palette-camera-capture>
+      <palette-image-upload name='A'></palette-image-upload>
+      <palette-image-upload name='B'></palette-image-upload>
+      <palette-image-upload name='C'></palette-image-upload>
+      <palette-image-upload name='D'></palette-image-upload>
+      <palette-image-upload name='E'></palette-image-upload>
+      <palette-image-upload name='F'></palette-image-upload>
     </palette-actions>
+
+    <button class='actions-button-prev'>Prev</button>
+    <button class='actions-button-next'>Next</button>
+    <button class='actions-button-1'>to 1</button>
 
     <main>
       <div class='main'>
