@@ -68,6 +68,9 @@ class Palette {
     });
 
     document.querySelector('palette-camera-capture').addEventListener('snap', (event) => {
+      const img = new Image();
+      img.src = event.detail.data.src;
+      this._ui.elements.body.appendChild(img);
       console.log('snapped', event, event.detail);
     });
   }

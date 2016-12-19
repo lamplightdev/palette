@@ -2,6 +2,17 @@ class PaletteCameraCapture extends HTMLElement {
   constructor() {
     super();
 
+    this._video = {
+      width: 0,
+      height: 0,
+      aspectRatio: 0,
+    };
+
+    this._container = {
+      width: 0,
+      height: 0,
+    };
+
     this._sources = [];
     this._currentSource = 0;
     this._available = false;
@@ -16,8 +27,12 @@ class PaletteCameraCapture extends HTMLElement {
           flex-direction: column;
         }
 
-        video {
-          height: 100%;
+        .container {
+          position: relative;
+          display: flex;
+          justify-content: center;
+
+          overflow: hidden;
         }
 
         button {
@@ -28,16 +43,18 @@ class PaletteCameraCapture extends HTMLElement {
         }
       </style>
 
-      <video></video>
+      <div class='container'>
+        <video></video>
+      </div>
       <button class='take-photo'>
         Snap
       </button>
     `;
 
-    const video = this.shadowRoot.querySelector('video');
+    const container = this.shadowRoot.querySelector('.container');
 
-    video.setAttribute('width', this.offsetHeight);
-    video.setAttribute('height', this.offsetHeight);
+    container.style.width = `${this.offsetWidth}px`;
+    container.style.height = `${this.offsetHeight}px`;
 
     this._snap = this._snap.bind(this);
   }
@@ -51,6 +68,7 @@ class PaletteCameraCapture extends HTMLElement {
 
         video.onloadedmetadata = () => {
           video.play();
+          this._getInfo();
         };
 
         video.src = window.URL.createObjectURL(result);
@@ -74,7 +92,8 @@ class PaletteCameraCapture extends HTMLElement {
 
   disconnectedCallback() {
     const button = this.shadowRoot.querySelector('button');
-    button.removeEventListener(this._snap);
+    button.removeEventListener('click', this._snap);
+    console.log('disconnected');
   }
 
   _initVideoAction() {
@@ -129,9 +148,36 @@ class PaletteCameraCapture extends HTMLElement {
     });
   }
 
-  _snap(event) {
+  _getInfo() {
+    const video = this.shadowRoot.querySelector('video');
+    const container = this.shadowRoot.querySelector('.container');
+
+    this._video.width = video.videoWidth;
+    this._video.height = video.videoHeight;
+    this._video.aspectRatio = this._video.width / this._video.height;
+
+    this._container.width = container.offsetWidth;
+    this._container.height = container.offsetHeight;
+    this._container.aspectRatio = this._container.width / this._container.height;
+
+    if (this._video.aspectRatio > this._container.aspectRatio) {
+      video.style.height = `${this._container.height}px`;
+    } else {
+      video.style.width = `${this._container.width}px`;
+    }
+  }
+
+  _snap() {
+    const video = this.shadowRoot.querySelector('video');
+
+    const canvas = document.createElement('canvas');
+    canvas.width = this._video.width;
+    canvas.height = this._video.height;
+
+    canvas.getContext('2d').drawImage(video, 0, 0);
+
     this._fireSnapEvent({
-      video: this.shadowRoot.querySelector('video'),
+      src: canvas.toDataURL(),
     });
   }
 }

@@ -104,6 +104,11 @@ class PaletteActions extends HTMLElement {
     this._size.width = this.offsetWidth;
     this._size.height = this.offsetHeight;
 
+    this._elements.actions.forEach(action => {
+      action.style.width = `${this._size.width}px`;
+      action.style.height = `${this._size.height}px`;
+    });
+
     this._elements.container.addEventListener('transitionend', this._transitionEnd);
   }
 
