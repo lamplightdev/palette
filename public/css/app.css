@@ -164,8 +164,22 @@ footer {
 }
 
 palette-actions {
-  width: 250px;
-  height: 250px;
+  width: 200px;
+  height: 200px;
+}
+
+palette-image-upload {
+  border-radius: 200px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+palette-camera-capture {
+  border-radius: 200px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 video, .actions, .video-container, .upload-container, .input-container, canvas {

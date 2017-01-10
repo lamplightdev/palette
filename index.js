@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 
 const Palette = require('./public/js/palette');
 const templateIndex = require('./templates/index');
+const templateLayout = require('./templates/layout');
 
 const app = express();
 
@@ -39,6 +40,11 @@ app.get('/', (req, res) => {
 
   res.send(templateIndex({
     colours,
+  }));
+});
+
+app.get('/layout', (req, res) => {
+  res.send(templateLayout({
   }));
 });
 

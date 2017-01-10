@@ -62,7 +62,7 @@ class PaletteActions extends HTMLElement {
           left: 0;
           bottom: 0;
 
-          transition: transform 1s ease-in-out 0s;
+          transition: transform 0.4s ease-in-out 0s;
         }
 
         .container.no-animation {
@@ -122,9 +122,9 @@ class PaletteActions extends HTMLElement {
 
     let left = 0;
     this._diff = nextIndex - prevIndex;
-    if (this._diff === 5) {
+    if (this._diff === this._actionInfo.number - 1) {
       this._diff = -1;
-    } else if (this._diff === -5) {
+    } else if (this._diff === -1 * (this._actionInfo.number - 1)) {
       this._diff = 1;
     }
 

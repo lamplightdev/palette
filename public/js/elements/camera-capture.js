@@ -25,12 +25,16 @@ class PaletteCameraCapture extends HTMLElement {
           position: relative;
           display: flex;
           flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;dddd
         }
 
         .container {
           position: relative;
           display: flex;
           justify-content: center;
+          align-items: center;
 
           overflow: hidden;
         }
@@ -40,6 +44,8 @@ class PaletteCameraCapture extends HTMLElement {
           bottom: 0;
           left: 0;
           right: 0;
+
+          width: 100%;
         }
       </style>
 
@@ -80,20 +86,11 @@ class PaletteCameraCapture extends HTMLElement {
 
     const button = this.shadowRoot.querySelector('button');
     button.addEventListener('click', this._snap);
-
-    this._fireSnapEvent = (data) => {
-      this.dispatchEvent(new CustomEvent('snap', {
-        detail: {
-          data,
-        },
-      }));
-    };
   }
 
   disconnectedCallback() {
     const button = this.shadowRoot.querySelector('button');
     button.removeEventListener('click', this._snap);
-    console.log('disconnected');
   }
 
   _initVideoAction() {
@@ -176,9 +173,11 @@ class PaletteCameraCapture extends HTMLElement {
 
     canvas.getContext('2d').drawImage(video, 0, 0);
 
-    this._fireSnapEvent({
-      src: canvas.toDataURL(),
-    });
+    this.dispatchEvent(new CustomEvent('snap', {
+      detail: {
+        src: canvas.toDataURL(),
+      },
+    }));
   }
 }
 

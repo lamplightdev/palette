@@ -51,14 +51,17 @@ class Palette {
     this._ui.elements.colourBarDivs = document.querySelectorAll('.colour-bar > div');
 
     this._actionsIndex = 0;
+    this._actionsTotal = document.querySelector('palette-actions')
+      .children
+      .length;
 
     document.querySelector('.actions-button-prev').addEventListener('click', () => {
-      this._actionsIndex = (this._actionsIndex - 1 + document.querySelectorAll('palette-image-upload').length + 1) % (document.querySelectorAll('palette-image-upload').length + 1);
+      this._actionsIndex = (this._actionsIndex - 1 + this._actionsTotal) % this._actionsTotal;
       document.querySelector('palette-actions').setAttribute('index', this._actionsIndex);
     });
 
     document.querySelector('.actions-button-next').addEventListener('click', () => {
-      this._actionsIndex = (this._actionsIndex + 1) % (document.querySelectorAll('palette-image-upload').length + 1);
+      this._actionsIndex = (this._actionsIndex + 1) % this._actionsTotal;
       document.querySelector('palette-actions').setAttribute('index', this._actionsIndex);
     });
 
@@ -68,11 +71,31 @@ class Palette {
     });
 
     document.querySelector('palette-camera-capture').addEventListener('snap', (event) => {
-      const img = new Image();
-      img.src = event.detail.data.src;
-      this._ui.elements.body.appendChild(img);
-      console.log('snapped', event, event.detail);
+      this._getColour(event.detail.src);
     });
+
+    [...document.querySelectorAll('palette-image-upload')].forEach(el => {
+      el.addEventListener('upload', (event) => {
+        this._getColour(event.detail.src);
+      });
+    });
+  }
+
+  _getColour(imgSrc) {
+    const img = new Image();
+    img.src = imgSrc;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height);
+
+    const pixel = canvas.getContext('2d').getImageData(100, 100, 1, 1).data;
+
+    console.log(pixel);
+
+    document.querySelector('palette-current-colour')
+      .setAttribute('colour', `${pixel[0]},${pixel[1]},${pixel[2]}`)
   }
 
   initUIEvents() {

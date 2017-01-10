@@ -2,6 +2,7 @@
   "extends": "airbnb-base",
 
   "globals": {
+    "HTMLElement": false
   },
 
   "rules": {
